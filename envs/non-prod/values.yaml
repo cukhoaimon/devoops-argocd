@@ -1,0 +1,45 @@
+# ──────────────────────────────────────────────
+# Values override cho môi trường NON-PROD
+# ──────────────────────────────────────────────
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: ""
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# ──────────────────────────────────────────────
+# PostgreSQL configuration (non-prod)
+# ──────────────────────────────────────────────
+postgresql:
+  enabled: true
+
+  image:
+    repository: postgres
+    tag: "16-alpine"
+
+  auth:
+    username: appuser
+    password: changeme-nonprod
+    database: appdb
+
+  storage:
+    size: 1Gi
+    storageClass: ""
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi

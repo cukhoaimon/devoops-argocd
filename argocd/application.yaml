@@ -1,60 +1,102 @@
-# ArgoCD Application cho workload chart
-# Apply file này lên cluster: kubectl apply -f argocd/application.yaml
-#
-# Yêu cầu: ArgoCD đã được cài trên cluster (namespace: argocd)
-# Xem hướng dẫn cài: https://argo-cd.readthedocs.io/en/stable/getting_started/
+# ArgoCD Applications cho 2 môi trường: non-prod và prod
+# Apply: kubectl apply -f argocd/application.yaml
 
+# ──────────────────────────────────────────────
+# NON-PROD environment
+# ──────────────────────────────────────────────
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: workload
-  namespace: argocd          # Namespace của ArgoCD (mặc định là "argocd")
+  name: non-prod-workload
+  namespace: argocd
   labels:
     app.kubernetes.io/managed-by: argocd
-  # Finalizer đảm bảo ArgoCD xoá tài nguyên khi Application bị xoá
+    environment: non-prod
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  # Project mặc định (cho phép tất cả)
   project: default
 
-  source:
-    # ⚠️  Đổi repoURL thành URL GitHub repo của bạn
-    repoURL: https://github.com/cukhoaimon/devoops.git
-    targetRevision: HEAD      # Dùng branch/tag cụ thể: "main", "v1.0.0"
-    path: workload            # Đường dẫn tới Helm chart trong repo
+  sources:
+    # Source 1: Helm chart
+    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
+      targetRevision: HEAD
+      path: workload
+      helm:
+        valueFiles:
+          - values.yaml
+          - $values/envs/non-prod/values.yaml
 
-    # Helm-specific config
-    helm:
-      # File values override (relative to chart path)
-      valueFiles:
-        - values.yaml
-      # Hoặc override values trực tiếp ở đây:
-      # values: |
-      #   replicaCount: 2
-      #   image:
-      #     repository: myapp
-      #     tag: "latest"
+    # Source 2: Values files (ref: $values)
+    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
+      targetRevision: HEAD
+      ref: values
 
   destination:
-    # Cluster target (https://kubernetes.default.svc = cùng cluster với ArgoCD)
     server: https://kubernetes.default.svc
-    # Namespace để deploy app
-    namespace: prod        # ⚠️  Đổi thành namespace của bạn, vd: "production"
+    namespace: non-prod
 
   syncPolicy:
-    # Tự động sync khi có thay đổi trên Git
     automated:
-      prune: true             # Xoá tài nguyên không còn trong Git
-      selfHeal: true          # Tự restore nếu ai đó thay đổi trực tiếp trên cluster
-      allowEmpty: false       # Không sync nếu manifest trống
-
+      prune: true
+      selfHeal: true
+      allowEmpty: false
     syncOptions:
-      - CreateNamespace=true  # Tự tạo namespace nếu chưa có
+      - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
 
-    # Retry khi sync thất bại
+---
+# ──────────────────────────────────────────────
+# PROD environment
+# ──────────────────────────────────────────────
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prod-workload
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    environment: prod
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    # Source 1: Helm chart
+    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
+      targetRevision: HEAD
+      path: workload
+      helm:
+        valueFiles:
+          - values.yaml
+          - $values/envs/prod/values.yaml
+
+    # Source 2: Values files (ref: $values)
+    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
+      targetRevision: HEAD
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prod
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
     retry:
       limit: 5
       backoff:

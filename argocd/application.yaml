@@ -1,0 +1,63 @@
+# ArgoCD Application cho workload chart
+# Apply file này lên cluster: kubectl apply -f argocd/application.yaml
+#
+# Yêu cầu: ArgoCD đã được cài trên cluster (namespace: argocd)
+# Xem hướng dẫn cài: https://argo-cd.readthedocs.io/en/stable/getting_started/
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: workload
+  namespace: argocd          # Namespace của ArgoCD (mặc định là "argocd")
+  labels:
+    app.kubernetes.io/managed-by: argocd
+  # Finalizer đảm bảo ArgoCD xoá tài nguyên khi Application bị xoá
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project mặc định (cho phép tất cả)
+  project: default
+
+  source:
+    # ⚠️  Đổi repoURL thành URL GitHub repo của bạn
+    repoURL: https://github.com/cukhoaimon/devoops.git
+    targetRevision: HEAD      # Dùng branch/tag cụ thể: "main", "v1.0.0"
+    path: workload            # Đường dẫn tới Helm chart trong repo
+
+    # Helm-specific config
+    helm:
+      # File values override (relative to chart path)
+      valueFiles:
+        - values.yaml
+      # Hoặc override values trực tiếp ở đây:
+      # values: |
+      #   replicaCount: 2
+      #   image:
+      #     repository: myapp
+      #     tag: "latest"
+
+  destination:
+    # Cluster target (https://kubernetes.default.svc = cùng cluster với ArgoCD)
+    server: https://kubernetes.default.svc
+    # Namespace để deploy app
+    namespace: prod        # ⚠️  Đổi thành namespace của bạn, vd: "production"
+
+  syncPolicy:
+    # Tự động sync khi có thay đổi trên Git
+    automated:
+      prune: true             # Xoá tài nguyên không còn trong Git
+      selfHeal: true          # Tự restore nếu ai đó thay đổi trực tiếp trên cluster
+      allowEmpty: false       # Không sync nếu manifest trống
+
+    syncOptions:
+      - CreateNamespace=true  # Tự tạo namespace nếu chưa có
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+
+    # Retry khi sync thất bại
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

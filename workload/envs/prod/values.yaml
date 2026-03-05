@@ -1,0 +1,45 @@
+# ──────────────────────────────────────────────
+# Values override cho môi trường PROD
+# ──────────────────────────────────────────────
+
+replicaCount: 2
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# ──────────────────────────────────────────────
+# PostgreSQL configuration (prod)
+# ──────────────────────────────────────────────
+postgresql:
+  enabled: true
+
+  image:
+    repository: postgres
+    tag: "16-alpine"
+
+  auth:
+    username: appuser
+    password: changeme-prod   # ⚠️ Đổi password này trước khi deploy!
+    database: appdb
+
+  storage:
+    size: 5Gi
+    storageClass: ""
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

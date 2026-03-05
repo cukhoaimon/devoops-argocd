@@ -1,5 +1,16 @@
 # ArgoCD Applications cho 2 môi trường: non-prod và prod
 # Apply: kubectl apply -f argocd/application.yaml
+#
+# Cấu trúc repo:
+#   workload/
+#   ├── Chart.yaml
+#   ├── values.yaml          ← base defaults
+#   ├── envs/
+#   │   ├── non-prod/
+#   │   │   └── values.yaml  ← non-prod overrides
+#   │   └── prod/
+#   │       └── values.yaml  ← prod overrides
+#   └── templates/
 
 # ──────────────────────────────────────────────
 # NON-PROD environment
@@ -17,20 +28,14 @@ metadata:
 spec:
   project: default
 
-  sources:
-    # Source 1: Helm chart
-    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
-      targetRevision: HEAD
-      path: workload
-      helm:
-        valueFiles:
-          - values.yaml
-          - $values/envs/non-prod/values.yaml
-
-    # Source 2: Values files (ref: $values)
-    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
-      targetRevision: HEAD
-      ref: values
+  source:
+    repoURL: https://github.com/cukhoaimon/devoops-argocd.git
+    targetRevision: HEAD
+    path: workload
+    helm:
+      valueFiles:
+        - values.yaml
+        - envs/non-prod/values.yaml
 
   destination:
     server: https://kubernetes.default.svc
@@ -69,20 +74,14 @@ metadata:
 spec:
   project: default
 
-  sources:
-    # Source 1: Helm chart
-    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
-      targetRevision: HEAD
-      path: workload
-      helm:
-        valueFiles:
-          - values.yaml
-          - $values/envs/prod/values.yaml
-
-    # Source 2: Values files (ref: $values)
-    - repoURL: https://github.com/cukhoaimon/devoops-argocd.git
-      targetRevision: HEAD
-      ref: values
+  source:
+    repoURL: https://github.com/cukhoaimon/devoops-argocd.git
+    targetRevision: HEAD
+    path: workload
+    helm:
+      valueFiles:
+        - values.yaml
+        - envs/prod/values.yaml
 
   destination:
     server: https://kubernetes.default.svc

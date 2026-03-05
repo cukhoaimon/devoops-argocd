@@ -1,0 +1,45 @@
+postgresql:
+  architecture: standalone
+
+  auth:
+    database: appdb
+    username: appuser
+    password: strongPass123
+
+  primary:
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: ""
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 250m
+        memory: 512Mi
+
+    # Health checks (Bitnami defaults are good, explicitly enabling for clarity)
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+
+  metrics:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi

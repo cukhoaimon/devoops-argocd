@@ -1,0 +1,9 @@
+apiVersion: v2
+name: my-postgres-prod
+version: 1.0.0
+description: A Helm chart for Production PostgreSQL
+type: application
+dependencies:
+  - name: postgresql
+    version: 18.5.2
+    repository: https://charts.bitnami.com/bitnami

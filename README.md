@@ -1,29 +1,35 @@
 # devoops - DevOps Learning Repo
 
-Helm chart + ArgoCD GitOps setup cho K8s.
+## Overview
 
-## Cấu trúc
+This repository is built for **GitOps** using **ArgoCD** to manage infrastructure deployments. It is currently focused on providing a **production-ready PostgreSQL** deployment across multiple environments (`dev`, `uat`, `prod`).
 
+## Architecture
+
+We use **ApplicationSets** inside the `bootstrap` folder to dynamically target environments.
+
+### Project Structure
 ```
-devops/
-├── argocd/
-│   └── application.yaml     # ArgoCD Application manifest
-└── workload/                # Helm chart
-    ├── Chart.yaml
-    ├── values.yaml          # Config chính (image, postgresql, autoscaling...)
-    └── templates/
-        ├── deployment.yaml
-        ├── service.yaml
-        ├── postgresql.yaml  # PostgreSQL StatefulSet + Service + Secret + PVC
-        ├── ingress.yaml
-        ├── hpa.yaml
-        └── ...
+devoops-argocd/
+├── bootstrap/
+│   └── infrastructure.yaml             # ArgoCD ApplicationSet to deploy PostgreSQL
+├── non-prod/
+│   └── infrastructure/
+│       └── postgresql/
+│           ├── Chart.yaml              # Bitnami PostgreSQL Helm Chart Reference
+│           ├── values-dev.yaml         # Standalone PostgreSQL (1 CPU / 512Mi / 2Gi)
+│           └── values-uat.yaml         # Standalone PostgreSQL (500m / 1Gi / 5Gi)
+└── prod/
+    └── infrastructure/
+        └── postgresql/
+            ├── Chart.yaml              # Bitnami PostgreSQL Helm Chart Reference
+            └── values-prod.yaml        # HA PostgreSQL with 1 Read Replica (2 CPU / 4Gi / 20Gi)
 ```
 
 ## Quick Start
 
-### 1. Cài ArgoCD lên cluster
-
+### 1. Install ArgoCD
+If not already installed on your cluster:
 ```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -35,58 +41,48 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-### 2. Cấu hình repo URL
-
-Sửa `argocd/application.yaml`, thay `repoURL` thành URL GitHub repo của bạn:
-
-```yaml
-source:
-  repoURL: https://github.com/<your-username>/devoops.git
-```
-
-Nếu repo private, thêm credentials qua ArgoCD UI: Settings → Repositories.
-
-### 3. Deploy ArgoCD Application
+### 2. Configure Credentials (CRITICAL)
+Before deploying, you **must** create the PostgreSQL password secrets in the target namespaces (`dev`, `uat`, `prod`). The Helm charts are tightly coupled to an `existingSecret` for security.
 
 ```bash
-kubectl apply -f argocd/application.yaml
+# Example for 'dev' environment
+kubectl create namespace dev
+kubectl create secret generic postgresql-credentials \
+  --namespace dev \
+  --from-literal=postgres-password="SuperSecretAdminPassword" \
+  --from-literal=password="SuperSecretAppPassword"
 ```
+*(Repeat for `uat` and `prod` namespaces with environment-appropriate passwords)*
 
-ArgoCD sẽ tự động sync Helm chart lên cluster.
+### 3. Deploy the Infrastructure
 
-### 4. Deploy thủ công bằng Helm (không cần ArgoCD)
+We use ArgoCD's `ApplicationSet` generator to automatically spin up PostgreSQL in the appropriate namespaces based on the directories.
 
 ```bash
-# Install
-helm install workload ./workload
-
-# Upgrade
-helm upgrade workload ./workload
-
-# Với custom values
-helm upgrade workload ./workload --set postgresql.auth.password=mysecretpassword
+kubectl apply -f bootstrap/infrastructure.yaml
 ```
 
-## PostgreSQL
+ArgoCD will automatically create three Applications:
+- `dev-postgresql` (deployed to `dev` namespace)
+- `uat-postgresql` (deployed to `uat` namespace)
+- `prod-postgresql` (deployed to `prod` namespace)
 
-Mặc định PostgreSQL được bật (`postgresql.enabled: true`) với:
+## PostgreSQL Details
 
-| Config | Giá trị mặc định |
-|--------|-----------------|
-| Image | `postgres:16-alpine` |
-| Database | `appdb` |
-| Username | `appuser` |
-| Password | `changeme` ⚠️ |
-| Storage | `1Gi` |
-| Port | `5432` |
+The databases are initialized with the following connection details (passwords are pulled from the secrets above):
 
-App kết nối PostgreSQL qua hostname:
+- **Database:** `appdb`
+- **Username:** `appuser`
+- **Port:** `5432`
 
+### Connecting from inside the cluster
+```bash
+# In Dev
+psql -h dev-postgresql-primary.dev.svc.cluster.local -U appuser -d appdb
+
+# In Prod (Primary Node)
+psql -h prod-postgresql-primary.prod.svc.cluster.local -U appuser -d appdb
+
+# In Prod (Read Replica)
+psql -h prod-postgresql-read.prod.svc.cluster.local -U appuser -d appdb
 ```
-<release-name>-workload-postgresql:5432
-```
-
-> ⚠️ **Đổi password** trước khi dùng trên production bằng cách override values:
-> ```bash
-> helm upgrade workload ./workload --set postgresql.auth.password=<strong-password>
-> ```

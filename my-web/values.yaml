@@ -1,4 +1,4 @@
-replicas: 1
+replicas: 3
 image:
   repository: my-web-app
   tag: v1

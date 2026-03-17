@@ -9,7 +9,7 @@ spec:
         paths:
           - path: /
             pathType: Prefix
-            backed:
+            backend:
               service:
                 name: my-web-service
                 port:

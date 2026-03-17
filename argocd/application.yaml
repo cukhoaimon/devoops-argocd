@@ -6,8 +6,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/cukhoaimon/devoops-argocd
-    targetRevision: main
+    repoURL: git@github.com:cukhoaimon/devoops-argocd.git
+    targetRevision: HEAD
     path: my-web
   destination:
     server: https://kubernetes.default.svc

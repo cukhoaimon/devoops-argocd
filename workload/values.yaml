@@ -1,0 +1,8 @@
+replicas: 1
+image:
+  repository: my-web-app
+  tag: v1
+  pullPolicy: Never
+service:
+  type: ClusterIP
+  port: 80

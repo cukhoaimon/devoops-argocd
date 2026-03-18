@@ -1,20 +1,13 @@
-apiVersion: v2
-appVersion: 2.0.1
-description: HBase is an open-source non-relational distributed database modeled after
-  Google's Bigtable and written in Java.
-home: https://hbase.apache.org/
-icon: http://hbase.apache.org/images/hbase_logo_with_orca.png
-maintainers:
-- email: cgiraldo@gradiant.org
-  name: cgiraldo
+apiVersion: v1
+description: Hbase Helm to deploy the distributed versions of warp10
 name: hbase
-version: 0.1.6
-dependencies:
-- name: hdfs
-  version: ~0.1.10
-  repository: https://gradiant.github.io/bigdata-charts/
-  condition: hdfs.enabled
-- name: zookeeper
-  version: ~6.3.0
-  repository: https://charts.bitnami.com/bitnami
-  condition: zookeeper.enabled
+version: 1.0.4
+appVersion: 2.7.3
+hbase.version: 1.4.2
+home: https://hadoop.apache.org/
+sources:
+- https://github.com/apache/hadoop
+icon: http://hadoop.apache.org/images/hadoop-logo.jpg
+maintainers:
+- name: Pierre Zemb
+  email: pierre.zemb.isen@gmnail.com

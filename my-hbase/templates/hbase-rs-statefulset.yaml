@@ -1,22 +1,22 @@
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: {{ template "hbase.fullname" . }}-master
+  name: {{ template "hbase.name" . }}-rs
   labels:
     app: {{ template "hbase.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-    component: hbase-master
+    component: hbase-rs
 spec:
-  serviceName: {{ template "hbase.fullname" . }}-master
-  replicas: {{ .Values.hbase.hmaster.replicas }}
+  serviceName: {{ template "hbase.name" . }}-rs
+  replicas: {{ .Values.hdfs.dataNode.replicas }}
   template:
     metadata:
       labels:
         app: {{ template "hbase.name" . }}
         release: {{ .Release.Name }}
-        component: hbase-master
+        component: hbase-rs
     spec:
       affinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -28,7 +28,7 @@ spec:
                 component: hdfs-nn
       terminationGracePeriodSeconds: 0
       containers:
-      - name: hbase-master
+      - name: hbase-rs
         image: {{ .Values.hbaseImage }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         command:
@@ -39,13 +39,13 @@ spec:
         readinessProbe:
           httpGet:
             path: /
-            port: 16010
+            port: 16030
           initialDelaySeconds: 5
           timeoutSeconds: 2
         livenessProbe:
           httpGet:
             path: /
-            port: 16010
+            port: 16030
           initialDelaySeconds: 10
           timeoutSeconds: 2
         volumeMounts:

@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://gradiant.github.io/charts/
+    repoURL: https://gradiant.github.io/bigdata-charts/
     chart: hbase
     targetRevision: 0.1.6
     helm:

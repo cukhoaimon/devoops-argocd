@@ -2,20 +2,22 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: my-hbase-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
     - host: my-hbase.local
       http:
         paths:
-          - path: /hbase-master-ui
-            pathType: Prefix
+          - path: /hbase-master-ui(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: my-hbase-service
                 port:
                   number: 16010
-          - path: /region-server-ui
-            pathType: Prefix
+          - path: /region-server-ui(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: my-hbase-service

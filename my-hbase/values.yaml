@@ -1,0 +1,10 @@
+replicas: 1
+image:
+  repository: harisekhon/hbase
+  tag: 0.92
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  ClusterIP: None
+storage:
+  size: 1Gi

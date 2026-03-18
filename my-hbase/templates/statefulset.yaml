@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-hbase-statefulset
+spec:
+  serviceName: my-hbase-service
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: my-hbase
+  template:
+    metadata:
+      labels:
+        app: my-hbase
+    spec:
+      containers:
+        - name: hbase
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 2181  # ZooKeeper
+            - containerPort: 16000 # Hbase Master
+            - containerPort: 16010 # Hbase Master Web UI 
+            - containerPort: 16020 # RegionServer
+            - containerPort: 16030 # RegionServer Web UI
+          volumeMounts:
+            - name: hbase-data
+              mountPath: /hbase-data
+  volumeClaimTemplates:
+    - metadata:
+      name: hbase-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.storage.size }}

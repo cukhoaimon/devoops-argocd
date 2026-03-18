@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1 
+kind: Ingress
+metadata:
+  name: my-hbase-ingress
+spec:
+  rules:
+    - host: my-hbase.local
+      http:
+        paths:
+          - path: /hbase-master-ui
+            pathType: Prefix
+            backend:
+              service:
+                name: my-hbase-service
+                port:
+                  number: 16010
+          - path: /region-server-ui
+            pathType: Prefix
+            backend:
+              service:
+                name: my-hbase-service
+                port:
+                  number: 16030
+          

@@ -2,6 +2,7 @@
 # See this repo for image build details: https://github.com/chenseanxy/helm-hbase-chart/tree/master/image
 
 hbaseImage: chenseanxy/hbase:1.4.10-hadoop3.1.2
+imagePullPolicy: IfNotPresent
 
 # Select anitAffinity as either hard or soft, default is hard
 antiAffinity: "soft"

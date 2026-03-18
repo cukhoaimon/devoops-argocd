@@ -28,7 +28,7 @@ spec:
               mountPath: /hbase-data
   volumeClaimTemplates:
     - metadata:
-      name: hbase-data
+        name: hbase-data
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:

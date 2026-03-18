@@ -1,7 +1,7 @@
-apiVersion: networking.k8s.io/v1 
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: my-hbase-ingress
+  name: {{ include "hbase.fullname" . }}-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
@@ -13,14 +13,13 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: my-hbase-service
+                name: {{ include "hbase.fullname" . }}-master
                 port:
                   number: 16010
           - path: /region-server-ui(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: my-hbase-service
+                name: {{ include "hbase.fullname" . }}-regionserver
                 port:
                   number: 16030
-          

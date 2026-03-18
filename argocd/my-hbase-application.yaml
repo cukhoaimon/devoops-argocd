@@ -6,9 +6,37 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/cukhoaimon/devoops-argocd
-    targetRevision: HEAD
-    path: my-hbase
+    repoURL: https://gradiant.github.io/charts/
+    chart: hbase
+    targetRevision: 0.1.6
+    helm:
+      values: |
+        hbase:
+          master:
+            replicas: 1
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "10m"
+              limits:
+                memory: "2048Mi"
+                cpu: "1000m"
+          regionServer:
+            replicas: 1
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "10m"
+              limits:
+                memory: "2048Mi"
+                cpu: "1000m"
+        zookeeper:
+          enabled: true
+          replicaCount: 1
+        hdfs:
+          enabled: true
+        prometheus:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: default

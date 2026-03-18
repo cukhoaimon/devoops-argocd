@@ -19,10 +19,10 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 2181  # ZooKeeper
-            - containerPort: 60000 # HBase Master
-            - containerPort: 60010 # HBase Master Web UI
-            - containerPort: 60020 # RegionServer
-            - containerPort: 60030 # RegionServer Web UI
+            - containerPort: 16000 # HBase Master
+            - containerPort: 16010 # HBase Master Web UI
+            - containerPort: 16020 # RegionServer
+            - containerPort: 16030 # RegionServer Web UI
             - containerPort: 8080  # REST API
           volumeMounts:
             - name: hbase-data

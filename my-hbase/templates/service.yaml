@@ -11,14 +11,14 @@ spec:
       port: 2181
       targetPort: 2181
     - name: hbase-master
-      port: 60000
-      targetPort: 60000
+      port: 16000
+      targetPort: 16000
     - name: hbase-master-ui
-      port: 60010
-      targetPort: 60010
+      port: 16010
+      targetPort: 16010
     - name: region-server
-      port: 60020
-      targetPort: 60020
+      port: 16020
+      targetPort: 16020
     - name: region-server-ui
-      port: 60030
-      targetPort: 60030
+      port: 16030
+      targetPort: 16030

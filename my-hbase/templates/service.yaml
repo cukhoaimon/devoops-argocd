@@ -6,19 +6,19 @@ spec:
   type: {{ .Values.service.type }}
   selector:
     app: my-hbase
-  ports: 
+  ports:
     - name: zookeeper
       port: 2181
       targetPort: 2181
     - name: hbase-master
-      port: 16000
-      targetPort: 16000
+      port: 60000
+      targetPort: 60000
     - name: hbase-master-ui
-      port: 16010
-      targetPort: 16010
+      port: 60010
+      targetPort: 60010
     - name: region-server
-      port: 16020
-      targetPort: 16020
+      port: 60020
+      targetPort: 60020
     - name: region-server-ui
-      port: 16030
-      targetPort: 16030
+      port: 60030
+      targetPort: 60030

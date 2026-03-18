@@ -15,12 +15,12 @@ spec:
               service:
                 name: my-hbase-service
                 port:
-                  number: 16010
+                  number: 60010
           - path: /region-server-ui(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: my-hbase-service
                 port:
-                  number: 16030
+                  number: 60030
           

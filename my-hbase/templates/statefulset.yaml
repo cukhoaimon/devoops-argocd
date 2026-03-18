@@ -19,13 +19,21 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 2181  # ZooKeeper
-            - containerPort: 16000 # Hbase Master
-            - containerPort: 16010 # Hbase Master Web UI 
-            - containerPort: 16020 # RegionServer
-            - containerPort: 16030 # RegionServer Web UI
+            - containerPort: 60000 # HBase Master
+            - containerPort: 60010 # HBase Master Web UI
+            - containerPort: 60020 # RegionServer
+            - containerPort: 60030 # RegionServer Web UI
+            - containerPort: 8080  # REST API
           volumeMounts:
             - name: hbase-data
               mountPath: /hbase-data
+            - name: hbase-config
+              mountPath: /hbase/conf/hbase-site.xml
+              subPath: hbase-site.xml
+      volumes:
+        - name: hbase-config
+          configMap:
+            name: my-hbase-config
   volumeClaimTemplates:
     - metadata:
         name: hbase-data

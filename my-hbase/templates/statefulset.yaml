@@ -13,6 +13,18 @@ spec:
       labels:
         app: my-hbase
     spec:
+      initContainers:
+        - name: copy-config
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command:
+            - sh
+            - -c
+            - cp /hbase/conf/* /hbase-conf/ && cp /hbase-config-source/hbase-site.xml /hbase-conf/hbase-site.xml
+          volumeMounts:
+            - name: hbase-config-source
+              mountPath: /hbase-config-source
+            - name: hbase-conf-writable
+              mountPath: /hbase-conf
       containers:
         - name: hbase
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -27,13 +39,14 @@ spec:
           volumeMounts:
             - name: hbase-data
               mountPath: /hbase-data
-            - name: hbase-config
-              mountPath: /hbase/conf/hbase-site.xml
-              subPath: hbase-site.xml
+            - name: hbase-conf-writable
+              mountPath: /hbase/conf
       volumes:
-        - name: hbase-config
+        - name: hbase-config-source
           configMap:
             name: my-hbase-config
+        - name: hbase-conf-writable
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: hbase-data

@@ -25,4 +25,8 @@ data:
         <name>hbase.master.hostname</name>
         <value>hbase-master</value>
       </property>
+      <property>
+        <name>hbase.master.ipc.address</name>
+        <value>0.0.0.0</value>
+      </property>
     </configuration>

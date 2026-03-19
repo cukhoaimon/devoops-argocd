@@ -1,0 +1,29 @@
+zookeeper:
+  replicaCount: 1 
+  auth:
+    enabled: false
+  persistence:
+    enabled: true
+    size: 2Gi
+
+hbase:
+  image: harisekhon/hbase:2.4
+  master:
+    replicas: 1
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+  regionserver:
+    replicas: 1
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1"
+    storage: 5Gi

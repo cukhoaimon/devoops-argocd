@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hbase-master
+spec:
+  replicas: {{ .Values.hbase.master.replicas }}
+  selector:
+    matchLabels:
+      app: hbase-master
+  template:
+    metadata:
+      labels:
+        app: hbase-master
+    spec:
+      initContainers:
+      - name: wait-zookeeper
+        image: busybox
+        command: ['sh', '-c',
+          'until nc -z {{ .Release.Name }}-zookeeper 2181;
+           do echo "waiting for ZK..."; sleep 3; done']
+      containers:
+      - name: hbase-master
+        image: {{ .Values.hbase.image }}
+        command: ["/bin/bash", "-c", "start-hbase.sh && hbase master start"]
+        ports:
+        - containerPort: 16000
+        - containerPort: 16010
+        resources: {{- toYaml .Values.hbase.master.resources | nindent 10 }}
+        volumeMounts:
+        - name: config
+          mountPath: /hbase-2.4.17/conf/hbase-site.xml
+          subPath: hbase-site.xml
+        readinessProbe:
+          tcpSocket:
+            port: 16000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 16000
+          initialDelaySeconds: 60
+          periodSeconds: 20
+      volumes:
+      - name: config
+        configMap:
+          name: hbase-config

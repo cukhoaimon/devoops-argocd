@@ -4,7 +4,7 @@ zookeeper:
   storage: 2Gi
 
 hbase:
-  image: apache/hbase:2.6.1    # ← official Apache image
+  image: harisekhon/hbase:2.1
   master:
     replicas: 1
     resources:

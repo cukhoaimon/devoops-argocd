@@ -1,8 +1,4 @@
 apiVersion: v2
 name: hbase
-description: HBase on Kubernetes (local dev)
+description: HBase on Kubernetes 
 version: 0.1.0
-dependencies:
-  - name: zookeeper
-    version: "12.x.x"
-    repository: https://charts.bitnami.com/bitnami

@@ -1,13 +1,10 @@
 zookeeper:
-  replicaCount: 1 
-  auth:
-    enabled: false
-  persistence:
-    enabled: true
-    size: 2Gi
+  image: zookeeper:3.9
+  replicas: 1
+  storage: 2Gi
 
 hbase:
-  image: harisekhon/hbase:2.4
+  image: apache/hbase:2.6.1    # ← official Apache image
   master:
     replicas: 1
     resources:

@@ -29,7 +29,7 @@ spec:
         resources: {{- toYaml .Values.hbase.regionserver.resources | nindent 10 }}
         volumeMounts:
         - name: config
-          mountPath: /hbase-2.4.17/conf/hbase-site.xml
+          mountPath: /hbase/conf/hbase-site.xml
           subPath: hbase-site.xml
         - name: data
           mountPath: /data

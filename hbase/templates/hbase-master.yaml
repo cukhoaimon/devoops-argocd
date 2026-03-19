@@ -21,14 +21,14 @@ spec:
       containers:
       - name: hbase-master
         image: {{ .Values.hbase.image }}
-        command: ["/bin/bash", "-c", "start-hbase.sh && hbase master start"]
+        command: ["/bin/bash", "-c", "hbase master start"]
         ports:
         - containerPort: 16000
         - containerPort: 16010
         resources: {{- toYaml .Values.hbase.master.resources | nindent 10 }}
         volumeMounts:
         - name: config
-          mountPath: /hbase-2.4.17/conf/hbase-site.xml
+          mountPath: /hbase/conf/hbase-site.xml
           subPath: hbase-site.xml
         readinessProbe:
           tcpSocket:

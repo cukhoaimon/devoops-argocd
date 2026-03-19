@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: zookeeper
+  name: {{ .Release.Name }}-zookeeper
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: zookeeper
+      app: {{ .Release.Name }}-zookeeper
   template:
     metadata:
       labels:
-        app: zookeeper
+        app: {{ .Release.Name }}-zookeeper
     spec:
       containers:
       - name: zookeeper
@@ -33,10 +33,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: zookeeper
+  name: {{ .Release.Name }}-zookeeper
 spec:
   selector:
-    app: zookeeper
+    app: {{ .Release.Name }}-zookeeper
   ports:
   - name: client
     port: 2181

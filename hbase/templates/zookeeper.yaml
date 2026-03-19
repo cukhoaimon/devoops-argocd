@@ -17,16 +17,12 @@ spec:
         image: {{ .Values.zookeeper.image }}
         ports:
         - containerPort: 2181
-        env:
-        - name: ZOO_MY_ID
-          value: "1"
-        - name: ZOO_SERVERS
-          value: "server.1=zookeeper:2888:3888"
         readinessProbe:
           exec:
             command: ["zkServer.sh", "status"]
-          initialDelaySeconds: 15
-          periodSeconds: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 6
         volumeMounts:
         - name: data
           mountPath: /data

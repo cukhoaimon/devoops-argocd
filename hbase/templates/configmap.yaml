@@ -21,4 +21,8 @@ data:
         <name>hbase.unsafe.stream.capability.enforce</name>
         <value>false</value>
       </property>
+      <property>
+        <name>hbase.master.hostname</name>
+        <value>hbase-master</value>
+      </property>
     </configuration>

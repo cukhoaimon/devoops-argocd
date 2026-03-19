@@ -9,7 +9,7 @@ metadata:
     heritage: {{ .Release.Service }}
     component: hbase-rs
 spec:
-  serviceName: {{ template "hbase.name" . }}-rs
+  serviceName: {{ template "hbase.fullname" . }}-rs
   replicas: {{ .Values.hdfs.dataNode.replicas }}
   selector:
     matchLabels:

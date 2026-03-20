@@ -31,12 +31,17 @@ spec:
         - name: config
           mountPath: /hbase/conf/hbase-site.xml
           subPath: hbase-site.xml
+        - name: rootdir
+          mountPath: /data/hbase
         - name: data
           mountPath: /data
       volumes:
       - name: config
         configMap:
           name: hbase-config
+      - name: rootdir
+        persistentVolumeClaim:
+          claimName: hbase-rootdir
   volumeClaimTemplates:
   - metadata:
       name: data

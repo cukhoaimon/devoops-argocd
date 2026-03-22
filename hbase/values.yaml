@@ -1,6 +1,6 @@
 zookeeper:
   image: zookeeper:3.9
-  replicas: 1
+  replicas: 0
   storage: 2Gi
 
 hbase:

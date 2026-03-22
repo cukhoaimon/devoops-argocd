@@ -1,0 +1,3 @@
+operators:
+  object-store:
+    disabled: false

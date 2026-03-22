@@ -1,0 +1,4 @@
+apiVersion: v2
+name: minio
+description: Minio on Kubernetes 
+version: 0.1.0

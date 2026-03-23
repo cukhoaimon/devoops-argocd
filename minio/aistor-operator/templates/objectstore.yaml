@@ -1,0 +1,27 @@
+apiVersion: aistor.min.io/v1
+kind: ObjectStore
+metadata:
+  name: {{ .Values.objectStore.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  credentialsSecret:
+    name: {{ .Values.objectStore.name }}-credentials
+  pools:
+  {{- range .Values.objectStore.pools }}
+  - name: {{ .name }}
+    servers: {{ .servers }}
+    volumesPerServer: {{ .volumesPerServer }}
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .size }}
+  {{- end }}
+  services:
+    minio:
+      serviceType: {{ .Values.objectStore.services.minio.serviceType }}
+      {{- if eq .Values.objectStore.services.minio.serviceType "NodePort" }}
+      nodePort: {{ .Values.objectStore.services.minio.nodePort }}
+      {{- end }}

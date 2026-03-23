@@ -1,11 +1,14 @@
 objectStore:
-   name: primary-object-store 
-   pools:
-   - name: pool-0
-     servers: 1 
-     volumesPerServer: 6 
-     size: 6Gi 
-   services:
-      minio:
-         serviceType: NodePort
-         nodePort: 31000 
+  name: primary-object-store
+  credentials:
+    accessKey: minio
+    secretKey: minio123
+  pools:
+  - name: pool-0
+    servers: 1
+    volumesPerServer: 6
+    size: 6Gi
+  services:
+    minio:
+      serviceType: NodePort
+      nodePort: 31000

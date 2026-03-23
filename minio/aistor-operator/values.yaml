@@ -6,9 +6,10 @@ objectStore:
   pools:
   - name: pool-0
     servers: 1
-    volumesPerServer: 6
-    size: 6Gi
+    volumesPerServer: 1
+    size: 10Gi
   services:
     minio:
       serviceType: NodePort
       nodePort: 31000
+      consoleNodePort: 31001

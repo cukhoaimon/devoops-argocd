@@ -8,7 +8,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.objectStore.pools | first | dig "size" "10Gi" }}
+      storage: {{ (index .Values.objectStore.pools 0).size }}
 ---
 apiVersion: apps/v1
 kind: Deployment

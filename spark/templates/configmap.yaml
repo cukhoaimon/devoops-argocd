@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-defaults
+  namespace: spark
+data:
+  spark-defaults.conf: |
+
+    # ─── Iceberg extensions ───────────────────────────────────────
+    spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+
+    # ─── Iceberg REST Catalog ─────────────────────────────────────
+    spark.sql.catalog.iceberg=org.apache.iceberg.spark.SparkCatalog
+    spark.sql.catalog.iceberg.type=rest
+    spark.sql.catalog.iceberg.uri=http://iceberg-rest-catalog.iceberg-catalog.svc.cluster.local:8181
+    spark.sql.catalog.iceberg.warehouse=s3://warehouse/
+
+    # FileIO: dùng S3FileIO để đọc/ghi MinIO
+    spark.sql.catalog.iceberg.io-impl=org.apache.iceberg.aws.s3.S3FileIO
+    spark.sql.catalog.iceberg.s3.endpoint=http://minio.minio.svc.cluster.local:9000
+    spark.sql.catalog.iceberg.s3.path-style-access=true
+    spark.sql.catalog.iceberg.s3.access-key-id=minio
+    spark.sql.catalog.iceberg.s3.secret-access-key=minio123
+
+    # Default catalog khi không prefix
+    spark.sql.defaultCatalog=iceberg
+
+    # ─── Hadoop S3A (cho executor đọc file trực tiếp) ─────────────
+    spark.hadoop.fs.s3a.endpoint=http://minio.minio.svc.cluster.local:9000
+    spark.hadoop.fs.s3a.access.key=minio
+    spark.hadoop.fs.s3a.secret.key=minio123
+    spark.hadoop.fs.s3a.path.style.access=true
+    spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem
+    spark.hadoop.fs.s3a.connection.ssl.enabled=false
+    spark.hadoop.fs.s3a.aws.credentials.provider=org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider
+
+    # ─── Spark on K8s ─────────────────────────────────────────────
+    spark.master=k8s://https://kubernetes.default.svc
+    spark.kubernetes.namespace=spark
+    spark.kubernetes.authenticate.driver.serviceAccountName=spark-driver
+    spark.kubernetes.container.image=your-registry/spark-iceberg:3.5.3
+    spark.kubernetes.container.image.pullPolicy=IfNotPresent
+
+    # Truyền credentials vào executor pods
+    spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID=minio-credentials:AWS_ACCESS_KEY_ID
+    spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY=minio-credentials:AWS_SECRET_ACCESS_KEY
+    spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=minio-credentials:AWS_ACCESS_KEY_ID
+    spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=minio-credentials:AWS_SECRET_ACCESS_KEY
+
+    # ─── Executor resources ────────────────────────────────────────
+    spark.executor.instances=2
+    spark.executor.memory=1g
+    spark.executor.cores=1
+    spark.driver.memory=1g
+
+    # ─── Spark Connect ────────────────────────────────────────────
+    spark.connect.grpc.binding.port=15002

@@ -1,0 +1,32 @@
+# Service cho Spark Connect (clients kết nối vào)
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-connect-server
+  namespace: spark
+spec:
+  selector:
+    app: spark-connect-server
+  ports:
+    - name: grpc
+      port: 15002
+      targetPort: 15002
+    - name: spark-ui
+      port: 4040
+      targetPort: 4040
+---
+# Headless service cho executor pods giao tiếp với driver
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-driver-headless
+  namespace: spark
+spec:
+  selector:
+    app: spark-connect-server
+  clusterIP: None
+  ports:
+    - name: block-manager
+      port: 7078
+    - name: driver
+      port: 2222

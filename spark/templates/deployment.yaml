@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-connect-server
+  namespace: spark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-connect-server
+  template:
+    metadata:
+      labels:
+        app: spark-connect-server
+    spec:
+      serviceAccountName: spark-driver
+
+      containers:
+        - name: spark-connect
+          image: ghcr.io/cukhoaimon/spark-iceberg:latest
+          imagePullPolicy: IfNotPresent
+
+          # Spark Connect Server start command
+          command:
+            - /bin/bash
+            - -c
+            - |
+              /opt/spark/sbin/start-connect-server.sh \
+                --properties-file /opt/spark/conf/spark-defaults.conf \
+                --conf spark.connect.grpc.binding.port=15002 \
+                && tail -f /opt/spark/logs/*.out
+
+          ports:
+            - name: grpc
+              containerPort: 15002
+            - name: spark-ui
+              containerPort: 4040
+            - name: block-manager
+              containerPort: 7078
+
+          envFrom:
+            - secretRef:
+                name: minio-credentials
+
+          env:
+            - name: AWS_REGION
+              value: us-east-1
+            - name: SPARK_NO_DAEMONIZE
+              value: "true"
+
+          volumeMounts:
+            - name: spark-conf
+              mountPath: /opt/spark/conf/spark-defaults.conf
+              subPath: spark-defaults.conf
+            - name: spark-logs
+              mountPath: /opt/spark/logs
+
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+
+          readinessProbe:
+            tcpSocket:
+              port: 15002
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+
+          livenessProbe:
+            tcpSocket:
+              port: 15002
+            initialDelaySeconds: 60
+            periodSeconds: 30
+
+      volumes:
+        - name: spark-conf
+          configMap:
+            name: spark-defaults
+        - name: spark-logs
+          emptyDir: {}

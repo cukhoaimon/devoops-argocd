@@ -6,7 +6,7 @@ zookeeper:
 hbase:
   image: harisekhon/hbase:2.1
   master:
-    replicas: 1
+    replicas: 0
     resources:
       requests:
         memory: "512Mi"
@@ -15,7 +15,7 @@ hbase:
         memory: "1Gi"
         cpu: "500m"
   regionserver:
-    replicas: 1
+    replicas: 0
     resources:
       requests:
         memory: "1Gi"

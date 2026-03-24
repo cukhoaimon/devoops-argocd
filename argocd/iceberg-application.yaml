@@ -6,8 +6,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/your-repo  # git repo của bạn
-    targetRevision: HEAD
+    repoURL: https://github.com/cukhoaimon/devoops-argocd
+    targetRevision: main
     path: iceberg
   destination:
     server: https://kubernetes.default.svc

@@ -1,4 +1,4 @@
 apiVersion: v2
-name: iceberg
-description: Iceberg on Kubernetes 
+name: spart
+description: Spark on Kubernetes 
 version: 0.1.0

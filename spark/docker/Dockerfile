@@ -4,7 +4,12 @@ USER root
 
 ENV ICEBERG_VERSION=1.6.1
 ENV SPARK_VERSION=3.5
+ENV SPARK_FULL_VERSION=3.5.3
 ENV SCALA_VERSION=2.12
+
+# Spark Connect jar (not included in base image)
+ADD https://repo1.maven.org/maven2/org/apache/spark/spark-connect_${SCALA_VERSION}/${SPARK_FULL_VERSION}/spark-connect_${SCALA_VERSION}-${SPARK_FULL_VERSION}.jar \
+    /opt/spark/jars/
 
 # Iceberg runtime (bao gồm cả Spark extensions)
 ADD https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-${SPARK_VERSION}_${SCALA_VERSION}/${ICEBERG_VERSION}/iceberg-spark-runtime-${SPARK_VERSION}_${SCALA_VERSION}-${ICEBERG_VERSION}.jar \

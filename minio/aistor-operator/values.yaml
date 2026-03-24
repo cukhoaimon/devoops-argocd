@@ -1,8 +1,12 @@
 objectStore:
   name: primary-object-store
-  credentials:
-    accessKey: minio
-    secretKey: minio123
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
   pools:
   - name: pool-0
     servers: 1

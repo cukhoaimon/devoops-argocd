@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceberg-rest-catalog
+  namespace: data-warehouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceberg-rest-catalog
+  template:
+    metadata:
+      labels:
+        app: iceberg-rest-catalog
+    spec:
+      containers:
+        - name: iceberg-rest
+          image: tabulario/iceberg-rest:0.10.0
+          ports:
+            - containerPort: 8181
+          env:
+            # ---- Warehouse location ----
+            - name: CATALOG_WAREHOUSE
+              value: s3://warehouse/
+
+            # ---- FileIO: dùng S3 (MinIO) ----
+            - name: CATALOG_IO__IMPL
+              value: org.apache.iceberg.aws.s3.S3FileIO
+
+            # ---- S3 / MinIO config ----
+            - name: CATALOG_S3_ENDPOINT
+              value: http://minio.minio.svc.cluster.local:9000
+            - name: CATALOG_S3_PATH__STYLE__ACCESS
+              value: "true"
+            - name: AWS_REGION
+              value: us-east-1         # bắt buộc dù MinIO không dùng
+
+            # ---- Credentials từ Secret ----
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: primary-object-store-credentials
+                  key: MINIO_ROOT_USER
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: primary-object-store-credentials
+                  key: MINIO_ROOT_PASSWORD
+
+            # ---- SQLite backend ----
+            - name: CATALOG_JDBC__IMPL
+              value: org.apache.iceberg.jdbc.JdbcCatalog
+            - name: CATALOG_URI
+              value: jdbc:sqlite:/catalog/iceberg.db
+            - name: CATALOG_JDBC_USER
+              value: iceberg
+            - name: CATALOG_JDBC_PASSWORD
+              value: iceberg
+
+          volumeMounts:
+            - name: catalog-data
+              mountPath: /catalog
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          readinessProbe:
+            httpGet:
+              path: /v1/config
+              port: 8181
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+      volumes:
+        - name: catalog-data
+          persistentVolumeClaim:
+            claimName: iceberg-catalog-data

@@ -41,6 +41,8 @@ spec:
               name: s3
             - containerPort: 9001
               name: console
+          resources:
+            {{- toYaml .Values.objectStore.resources | nindent 12 }}
           volumeMounts:
             - name: data
               mountPath: /data

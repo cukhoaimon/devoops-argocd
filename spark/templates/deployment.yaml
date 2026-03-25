@@ -17,8 +17,8 @@ spec:
 
       containers:
         - name: spark-connect
-          image: spark-iceberg:latest
-          imagePullPolicy: Never
+          image: ghcr.io/cukhoaimon/spark-iceberg:latest
+          imagePullPolicy: Always
 
           # Spark Connect Server start command
           command:

@@ -17,7 +17,7 @@ spec:
 
       containers:
         - name: spark-connect
-          image: tabulario/spark-iceberg
+          image: apache/spark:3.5.3-python3
           imagePullPolicy: IfNotPresent
 
           # Spark Connect Server start command

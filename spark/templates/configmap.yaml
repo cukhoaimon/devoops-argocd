@@ -47,6 +47,7 @@ data:
     spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY=minio-credentials:AWS_SECRET_ACCESS_KEY
     spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=minio-credentials:AWS_ACCESS_KEY_ID
     spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=minio-credentials:AWS_SECRET_ACCESS_KEY
+    spark.kubernetes.executor.env.AWS_REGION=us-east-1
 
     # ─── Executor resources ────────────────────────────────────────
     spark.executor.instances=2

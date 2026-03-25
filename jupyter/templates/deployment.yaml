@@ -4,7 +4,7 @@ metadata:
   name: jupyter
   namespace: spark
 spec:
-  replicas: 0
+  replicas: {{ .Values.service.replicas }}
   selector:
     matchLabels:
       app: jupyter
@@ -40,4 +40,5 @@ spec:
               mountPath: /home/jovyan/work
       volumes:
         - name: notebooks
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: jupyter-notebooks

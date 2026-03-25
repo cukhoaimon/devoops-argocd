@@ -17,7 +17,7 @@ spec:
 
       containers:
         - name: spark-connect
-          image: ghcr.io/cukhoaimon/spark-iceberg:latest
+          image: apache/spark:3.5.3-python3
           imagePullPolicy: IfNotPresent
 
           # Spark Connect Server start command
@@ -59,6 +59,8 @@ spec:
               subPath: spark-defaults.conf
             - name: spark-logs
               mountPath: /opt/spark/logs
+            - name: ivy-cache
+              mountPath: /opt/spark/ivy-cache
 
           resources:
             requests:
@@ -87,3 +89,6 @@ spec:
             name: spark-defaults
         - name: spark-logs
           emptyDir: {}
+        - name: ivy-cache
+          persistentVolumeClaim:
+            claimName: spark-ivy-cache

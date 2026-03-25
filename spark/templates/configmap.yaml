@@ -38,8 +38,8 @@ data:
     spark.master=k8s://https://kubernetes.default.svc
     spark.kubernetes.namespace=spark
     spark.kubernetes.authenticate.driver.serviceAccountName=spark-driver
-    spark.kubernetes.container.image=ghcr.io/cukhoaimon/spark-iceberg:latest
-    spark.kubernetes.container.image.pullPolicy=Always
+    spark.kubernetes.container.image=tabulario/spark-iceberg
+    spark.kubernetes.container.image.pullPolicy=IfNotPresent
 
     # Truyền credentials vào executor pods
     spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID=minio-credentials:AWS_ACCESS_KEY_ID

@@ -17,8 +17,8 @@ spec:
 
       containers:
         - name: spark-connect
-          image: ghcr.io/cukhoaimon/spark-iceberg:latest
-          imagePullPolicy: Always
+          image: tabulario/spark-iceberg
+          imagePullPolicy: IfNotPresent
 
           # Spark Connect Server start command
           command:

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: jupyter
+description: JupyterLab for Spark + Iceberg exploration
+version: 0.1.0

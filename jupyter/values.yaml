@@ -1,0 +1,14 @@
+image:
+  repository: quay.io/jupyter/pyspark-notebook
+  tag: latest
+  pullPolicy: Always
+
+service:
+  port: 8888
+
+ingress:
+  host: jupyter.local
+  ingressClassName: traefik
+
+sparkConnect:
+  url: sc://spark-connect-server.spark.svc.cluster.local:15002

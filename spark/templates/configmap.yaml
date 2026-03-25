@@ -21,6 +21,7 @@ data:
     spark.sql.catalog.iceberg.s3.path-style-access=true
     spark.sql.catalog.iceberg.s3.access-key-id=minio
     spark.sql.catalog.iceberg.s3.secret-access-key=minio123
+    spark.sql.catalog.iceberg.s3.region=us-east-1
 
     # Default catalog khi không prefix
     spark.sql.defaultCatalog=iceberg

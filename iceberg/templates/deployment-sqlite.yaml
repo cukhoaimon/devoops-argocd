@@ -29,7 +29,7 @@ spec:
 
             # ---- S3 / MinIO config ----
             - name: CATALOG_S3_ENDPOINT
-              value: http://minio.minio.svc.cluster.local:9000
+              value: http://primary-object-store.data-warehouse.svc.cluster.local:9000
             - name: CATALOG_S3_PATH__STYLE__ACCESS
               value: "true"
             - name: AWS_REGION

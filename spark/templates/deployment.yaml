@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: spark-connect-server
-  namespace: spark
+  namespace: {{ .Release.Namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: 3
   selector:
     matchLabels:
@@ -14,12 +14,12 @@ spec:
       labels:
         app: spark-connect-server
     spec:
-      serviceAccountName: spark-driver
+      serviceAccountName: {{ .Values.spark.serviceAccountName }}
 
       containers:
         - name: spark-connect
-          image: ghcr.io/cukhoaimon/spark-iceberg:latest
-          imagePullPolicy: Always
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           # Spark Connect Server start command
           command:
@@ -28,13 +28,13 @@ spec:
             - |
               /opt/spark/sbin/start-connect-server.sh \
                 --properties-file /opt/spark/conf/spark-defaults.conf \
-                --conf spark.connect.grpc.binding.port=15002 \
+                --conf spark.connect.grpc.binding.port={{ .Values.connectPort }} \
                 --conf spark.driver.host=${MY_POD_IP} \
                 && tail -f /opt/spark/logs/*.out
 
           ports:
             - name: grpc
-              containerPort: 15002
+              containerPort: {{ .Values.connectPort }}
             - name: spark-ui
               containerPort: 4040
             - name: block-manager
@@ -48,7 +48,7 @@ spec:
 
           env:
             - name: AWS_REGION
-              value: us-east-1
+              value: {{ .Values.aws.region }}
             - name: SPARK_NO_DAEMONIZE
               value: "true"
             - name: MY_POD_IP
@@ -67,24 +67,24 @@ spec:
 
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "500m"
+              memory: {{ .Values.resources.requests.memory | quote }}
+              cpu: {{ .Values.resources.requests.cpu | quote }}
             limits:
-              memory: "2Gi"
-              cpu: "2000m"
+              memory: {{ .Values.resources.limits.memory | quote }}
+              cpu: {{ .Values.resources.limits.cpu | quote }}
 
           readinessProbe:
             tcpSocket:
-              port: 15002
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            failureThreshold: 5
+              port: {{ .Values.connectPort }}
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
 
           livenessProbe:
             tcpSocket:
-              port: 15002
-            initialDelaySeconds: 60
-            periodSeconds: 30
+              port: {{ .Values.connectPort }}
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
 
       volumes:
         - name: spark-conf

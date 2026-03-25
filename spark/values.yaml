@@ -1,0 +1,51 @@
+image:
+  repository: ghcr.io/cukhoaimon/spark-iceberg
+  tag: "3.5.3"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+connectPort: 15002
+
+resources:
+  requests:
+    memory: "1Gi"
+    cpu: "500m"
+  limits:
+    memory: "2Gi"
+    cpu: "2000m"
+
+probes:
+  readiness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 5
+  liveness:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+
+aws:
+  region: us-east-1
+
+iceberg:
+  catalogUri: http://iceberg-rest-catalog.data-warehouse.svc.cluster.local:8181
+  warehouse: s3://warehouse/
+
+minio:
+  endpoint: http://primary-object-store.data-warehouse.svc.cluster.local:9000
+  accessKeyId: minio
+  secretAccessKey: minio123
+
+spark:
+  master: k8s://https://kubernetes.default.svc
+  namespace: spark
+  serviceAccountName: spark-driver
+  executor:
+    instances: 2
+    memory: 1g
+    cores: 1
+  driver:
+    memory: 1g
+
+ivyCache:
+  storage: 2Gi

@@ -37,15 +37,9 @@ spec:
 
             # ---- Credentials từ Secret ----
             - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: primary-object-store-credentials
-                  key: MINIO_ROOT_USER
+              value: minio
             - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: primary-object-store-credentials
-                  key: MINIO_ROOT_PASSWORD
+              value: minio123
 
             # ---- SQLite backend ----
             - name: CATALOG_JDBC__IMPL

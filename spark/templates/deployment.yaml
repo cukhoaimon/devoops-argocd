@@ -5,6 +5,7 @@ metadata:
   namespace: spark
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: spark-connect-server

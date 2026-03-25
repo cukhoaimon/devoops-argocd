@@ -3,6 +3,7 @@ kind: Ingress
 metadata:
   name: my-web-ingress
 spec:
+  ingressClassName: traefik
   rules:
     - host: my-web.local
       http:

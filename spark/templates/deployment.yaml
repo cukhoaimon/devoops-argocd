@@ -17,8 +17,8 @@ spec:
 
       containers:
         - name: spark-connect
-          image: apache/spark:3.5.3-python3
-          imagePullPolicy: IfNotPresent
+          image: tabulario/spark-iceberg
+          imagePullPolicy: Always
 
           # Spark Connect Server start command
           command:
@@ -38,6 +38,8 @@ spec:
               containerPort: 4040
             - name: block-manager
               containerPort: 7078
+            - name: jupyter
+              containerPort: 8888
 
           envFrom:
             - secretRef:

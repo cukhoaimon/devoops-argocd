@@ -12,7 +12,7 @@ data:
     # ─── Iceberg REST Catalog ─────────────────────────────────────
     spark.sql.catalog.iceberg=org.apache.iceberg.spark.SparkCatalog
     spark.sql.catalog.iceberg.type=rest
-    spark.sql.catalog.iceberg.uri=http://iceberg-rest-catalog.iceberg-catalog.svc.cluster.local:8181
+    spark.sql.catalog.iceberg.uri=http://iceberg-rest-catalog.data-warehouse.svc.cluster.local:8181
     spark.sql.catalog.iceberg.warehouse=s3://warehouse/
 
     # FileIO: dùng S3FileIO để đọc/ghi MinIO
@@ -38,8 +38,8 @@ data:
     spark.master=k8s://https://kubernetes.default.svc
     spark.kubernetes.namespace=spark
     spark.kubernetes.authenticate.driver.serviceAccountName=spark-driver
-    spark.kubernetes.container.image=your-registry/spark-iceberg:3.5.3
-    spark.kubernetes.container.image.pullPolicy=IfNotPresent
+    spark.kubernetes.container.image=spark-iceberg:latest
+    spark.kubernetes.container.image.pullPolicy=Never
 
     # Truyền credentials vào executor pods
     spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID=minio-credentials:AWS_ACCESS_KEY_ID

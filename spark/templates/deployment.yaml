@@ -17,8 +17,8 @@ spec:
 
       containers:
         - name: spark-connect
-          image: ghcr.io/cukhoaimon/spark-iceberg:latest
-          imagePullPolicy: IfNotPresent
+          image: spark-iceberg:latest
+          imagePullPolicy: Never
 
           # Spark Connect Server start command
           command:
@@ -28,6 +28,7 @@ spec:
               /opt/spark/sbin/start-connect-server.sh \
                 --properties-file /opt/spark/conf/spark-defaults.conf \
                 --conf spark.connect.grpc.binding.port=15002 \
+                --conf spark.driver.host=${MY_POD_IP} \
                 && tail -f /opt/spark/logs/*.out
 
           ports:
@@ -47,6 +48,10 @@ spec:
               value: us-east-1
             - name: SPARK_NO_DAEMONIZE
               value: "true"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
 
           volumeMounts:
             - name: spark-conf

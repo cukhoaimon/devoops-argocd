@@ -23,6 +23,12 @@ ADD https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.20.18/bundle-
 ADD https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/${ICEBERG_VERSION}/iceberg-aws-bundle-${ICEBERG_VERSION}.jar \
     /opt/spark/jars/
 
+# Fix permissions so user 185 can read the downloaded jars
+RUN chmod 644 /opt/spark/jars/spark-connect_${SCALA_VERSION}-${SPARK_FULL_VERSION}.jar \
+    /opt/spark/jars/iceberg-spark-runtime-${SPARK_VERSION}_${SCALA_VERSION}-${ICEBERG_VERSION}.jar \
+    /opt/spark/jars/bundle-2.20.18.jar \
+    /opt/spark/jars/iceberg-aws-bundle-${ICEBERG_VERSION}.jar
+
 # Python packages
 RUN pip install --no-cache-dir \
     pyspark==3.5.3 \

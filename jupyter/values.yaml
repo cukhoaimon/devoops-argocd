@@ -8,7 +8,7 @@ service:
 
 ingress:
   host: jupyter.local
-  ingressClassName: traefik
+  ingressClassName: nginx
 
 sparkConnect:
   url: sc://spark-connect-server.spark.svc.cluster.local:15002

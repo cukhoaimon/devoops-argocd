@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: jupyter-ingress
   namespace: spark
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:

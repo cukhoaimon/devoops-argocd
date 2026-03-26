@@ -18,7 +18,7 @@ persistence:
   size: 1Gi
 
 gitSync:
-  enabled: false
+  enabled: true
   image: alpine:3.20
   repo: cukhoaimon/devoops-argocd
   branch: main

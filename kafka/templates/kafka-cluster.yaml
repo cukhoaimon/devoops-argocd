@@ -5,7 +5,7 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  replicas: 3
+  replicas: 1
   roles:
     - controller
   storage:
@@ -24,7 +24,7 @@ metadata:
   labels:
     strimzi.io/cluster: my-cluster
 spec:
-  replicas: 3
+  replicas: 1
   roles:
     - broker
   storage:
@@ -54,11 +54,11 @@ spec:
         type: internal
         tls: true
     config:
-      offsets.topic.replication.factor: 3
-      transaction.state.log.replication.factor: 3
-      transaction.state.log.min.isr: 2
-      default.replication.factor: 3
-      min.insync.replicas: 2
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
   entityOperator:
     topicOperator: {}
     userOperator: {}

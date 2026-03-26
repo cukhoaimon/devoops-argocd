@@ -13,6 +13,42 @@ spec:
       labels:
         app: jupyter
     spec:
+      {{- if .Values.gitSync.enabled }}
+      initContainers:
+        - name: init-notebook-repo
+          image: {{ .Values.gitSync.image | quote }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.gitSync.secretName }}
+                  key: {{ .Values.gitSync.secretTokenKey }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              apk add --no-cache git >/dev/null
+              REPO_DIR="/home/jovyan/work/repo"
+              REMOTE_URL="https://${GIT_TOKEN}@github.com/{{ .Values.gitSync.repo }}.git"
+
+              if [ ! -d "${REPO_DIR}/.git" ]; then
+                rm -rf "${REPO_DIR}"
+                git clone --branch {{ .Values.gitSync.branch | quote }} "${REMOTE_URL}" "${REPO_DIR}"
+              else
+                cd "${REPO_DIR}"
+                git remote set-url origin "${REMOTE_URL}"
+                git fetch origin {{ .Values.gitSync.branch | quote }}
+                git checkout {{ .Values.gitSync.branch | quote }}
+                git pull --rebase origin {{ .Values.gitSync.branch | quote }}
+              fi
+
+              mkdir -p "${REPO_DIR}/{{ .Values.gitSync.notebooksPath }}"
+          volumeMounts:
+            - name: notebooks
+              mountPath: /home/jovyan/work
+      {{- end }}
       containers:
         - name: jupyter
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -29,6 +65,9 @@ spec:
             - --ip=0.0.0.0
             - --port=8888
             - --ServerApp.trust_xheaders=True
+            {{- if .Values.gitSync.enabled }}
+            - --ServerApp.root_dir=/home/jovyan/work/repo/{{ .Values.gitSync.notebooksPath }}
+            {{- end }}
           resources:
             requests:
               memory: "512Mi"
@@ -39,6 +78,66 @@ spec:
           volumeMounts:
             - name: notebooks
               mountPath: /home/jovyan/work
+      {{- if .Values.gitSync.enabled }}
+        - name: git-autosync
+          image: {{ .Values.gitSync.image | quote }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GIT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.gitSync.secretName }}
+                  key: {{ .Values.gitSync.secretTokenKey }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              apk add --no-cache git >/dev/null
+              REPO_DIR="/home/jovyan/work/repo"
+              BRANCH={{ .Values.gitSync.branch | quote }}
+              REMOTE_URL="https://${GIT_TOKEN}@github.com/{{ .Values.gitSync.repo }}.git"
+
+              cd "${REPO_DIR}"
+              git remote set-url origin "${REMOTE_URL}"
+              git config user.name {{ .Values.gitSync.commitUserName | quote }}
+              git config user.email {{ .Values.gitSync.commitUserEmail | quote }}
+
+              while true; do
+                cd "${REPO_DIR}"
+                STATUS_BEFORE="$(git status --porcelain -- {{ .Values.gitSync.notebooksPath | quote }})"
+
+                if [ -n "${STATUS_BEFORE}" ]; then
+                  # Debounce commits: only commit when no additional changes happen
+                  # for the configured idle window.
+                  FINGERPRINT_BEFORE="$(printf '%s' "${STATUS_BEFORE}" | sha256sum | awk '{print $1}')"
+                  sleep {{ .Values.gitSync.idleSeconds }}
+                  STATUS_AFTER="$(git status --porcelain -- {{ .Values.gitSync.notebooksPath | quote }})"
+                  FINGERPRINT_AFTER="$(printf '%s' "${STATUS_AFTER}" | sha256sum | awk '{print $1}')"
+
+                  if [ -n "${STATUS_AFTER}" ] && [ "${FINGERPRINT_BEFORE}" = "${FINGERPRINT_AFTER}" ]; then
+                    git add {{ .Values.gitSync.notebooksPath | quote }}
+
+                    if ! git diff --cached --quiet; then
+                      git commit -m "{{ .Values.gitSync.commitMessagePrefix }} $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+                      if ! git pull --rebase origin "${BRANCH}"; then
+                        git rebase --abort || true
+                      fi
+
+                      if ! git push origin "${BRANCH}"; then
+                        echo "git push failed, will retry in next cycle"
+                      fi
+                    fi
+                  fi
+                fi
+
+                sleep {{ .Values.gitSync.syncIntervalSeconds }}
+              done
+          volumeMounts:
+            - name: notebooks
+              mountPath: /home/jovyan/work
+      {{- end }}
       volumes:
         - name: notebooks
           persistentVolumeClaim:

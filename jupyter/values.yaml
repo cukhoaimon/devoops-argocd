@@ -16,3 +16,17 @@ sparkConnect:
 
 persistence:
   size: 1Gi
+
+gitSync:
+  enabled: false
+  image: alpine:3.20
+  repo: cukhoaimon/devoops-argocd
+  branch: main
+  notebooksPath: apps/notebook
+  syncIntervalSeconds: 30
+  idleSeconds: 180
+  secretName: jupyter-git-token
+  secretTokenKey: token
+  commitUserName: jupyter-bot
+  commitUserEmail: jupyter-bot@phucdeptrai.com
+  commitMessagePrefix: "chore(notebook): autosave"

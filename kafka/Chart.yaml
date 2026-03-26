@@ -1,0 +1,4 @@
+apiVersion: v2
+name: kafka
+description: Kafka Cluster on K8s
+version: 0.1.0

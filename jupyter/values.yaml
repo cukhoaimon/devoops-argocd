@@ -21,7 +21,7 @@ gitSync:
   enabled: true
   image: alpine:3.20
   repo: cukhoaimon/devoops-argocd
-  branch: main
+  branch: notebooks
   notebooksPath: apps/notebook
   syncIntervalSeconds: 30
   idleSeconds: 180

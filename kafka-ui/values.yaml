@@ -20,7 +20,7 @@ yamlApplicationConfig:
   management:
     health:
       ldap:
-        enabled: false
+        enabled: true
 
 envs:
   secret: {}

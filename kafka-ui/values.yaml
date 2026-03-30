@@ -22,6 +22,10 @@ yamlApplicationConfig:
       ldap:
         enabled: false
 
+envs:
+  secret: {}
+  config: {}
+
 resources:
   limits:
     cpu: 200m

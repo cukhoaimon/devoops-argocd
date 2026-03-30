@@ -25,6 +25,8 @@ yamlApplicationConfig:
 envs:
   secret: {}
   config: {}
+  secretMappings: {}
+  configMappings: {}
 
 resources:
   limits:
@@ -33,6 +35,17 @@ resources:
   requests:
     cpu: 200m
     memory: 256Mi
+
+probes:
+  useHttpsScheme: false
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 10
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 10
 
 podSecurityContext:
   fsGroup: 2000
@@ -61,3 +74,8 @@ ingress:
   path: "/"
   pathType: "Prefix"
   host: "kafka-ui.local"
+  tls:
+    enabled: false
+
+autoscaling:
+  enabled: false

@@ -39,11 +39,11 @@ resources:
 probes:
   useHttpsScheme: false
   liveness:
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 30
     timeoutSeconds: 10
   readiness:
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 30
     timeoutSeconds: 10
 

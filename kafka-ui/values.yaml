@@ -53,6 +53,9 @@ service:
   type: ClusterIP
   port: 80
 
+networkPolicy:
+  enabled: false
+
 ingress:
   enabled: true
   path: "/"

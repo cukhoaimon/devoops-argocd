@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  SATELLITE_ID: {{ .Values.satellite.id | quote }}
+  SATELLITE_NAME: {{ .Values.satellite.name | quote }}
+  ORBIT_ALTITUDE_KM: {{ .Values.satellite.orbit.altitude_km | quote }}
+  ORBIT_INCLINATION_DEG: {{ .Values.satellite.orbit.inclination_deg | quote }}
+  ORBIT_PERIOD_S: {{ .Values.satellite.orbit.period_s | quote }}
+  TICK_INTERVAL_S: {{ .Values.satellite.tick_interval_s | quote }}
+  ANOMALY_PROBABILITY: {{ .Values.satellite.anomaly_probability | quote }}
+  KAFKA_BOOTSTRAP: {{ .Values.kafka.bootstrap | quote }}
+  KAFKA_TOPIC: {{ .Values.kafka.topic | quote }}

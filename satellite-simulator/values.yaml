@@ -1,0 +1,18 @@
+satellite:
+  id: "SAT-001"
+  name: "Explorer-1"
+  orbit:
+    altitude_km: 550
+    inclination_deg: 53
+    period_s: 5760     # ~96 min LEO
+  tick_interval_s: 1
+  anomaly_probability: 0.005
+
+kafka:
+  bootstrap: "my-cluster-kafka-bootstrap.kafka:9092"
+  topic: "satellite-telemetry"
+
+image:
+  repository: ghcr.io/cukhoaimon/satellite-simulator
+  tag: "latest"
+  pullPolicy: Always

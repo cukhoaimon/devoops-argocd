@@ -1,0 +1,5 @@
+apiVersion: v2
+name: satellite-simulator
+description: IoT satellite telemetry simulator — produces CCSDS telemetry to Kafka
+version: 0.1.0
+appVersion: "0.1.0"

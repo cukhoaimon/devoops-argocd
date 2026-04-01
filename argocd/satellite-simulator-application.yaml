@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: satellite-simulator
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cukhoaimon/devoops-argocd
+    targetRevision: main
+    path: satellite-simulator
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafka
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

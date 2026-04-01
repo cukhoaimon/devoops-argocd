@@ -1,0 +1,19 @@
+[project]
+name = "satellite-simulator"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "kafka-python>=2.0.2",
+]
+
+[project.scripts]
+satellite-simulator = "app.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.0",
+]

@@ -73,3 +73,76 @@ def test_cds_day_matches_j2000_offset():
     d = pkt.to_dict()
     assert d["cds_day"] == 0
     assert d["cds_ms"] == 0
+
+
+from app.payload import Payload, PayloadData
+from app.states import SatelliteState
+
+
+def test_payload_returns_payload_data():
+    pl = Payload()
+    data = pl.update(SatelliteState.NOMINAL, _now())
+    assert isinstance(data, PayloadData)
+
+
+def test_no_packets_in_eclipse():
+    pl = Payload()
+    data = pl.update(SatelliteState.ECLIPSE, _now())
+    assert data.packets == []
+
+
+def test_no_packets_in_safe_mode():
+    pl = Payload()
+    data = pl.update(SatelliteState.SAFE_MODE, _now())
+    assert data.packets == []
+
+
+def test_hk_packet_emitted_every_nominal_tick():
+    pl = Payload()
+    data = pl.update(SatelliteState.NOMINAL, _now())
+    apids = [p["apid"] for p in data.packets]
+    assert APID_HK in apids
+
+
+def test_hk_packet_emitted_in_downlink():
+    pl = Payload()
+    data = pl.update(SatelliteState.DOWNLINK_PASS, _now())
+    apids = [p["apid"] for p in data.packets]
+    assert APID_HK in apids
+
+
+def test_hk_sequence_counter_increments_per_tick():
+    pl = Payload()
+    now = _now()
+    d1 = pl.update(SatelliteState.NOMINAL, now)
+    d2 = pl.update(SatelliteState.NOMINAL, now)
+    hk1 = next(p for p in d1.packets if p["apid"] == APID_HK)
+    hk2 = next(p for p in d2.packets if p["apid"] == APID_HK)
+    assert hk2["sequence_count"] == hk1["sequence_count"] + 1
+
+
+def test_sequence_counter_wraps_at_14_bits():
+    pl = Payload()
+    pl._seq_counters[APID_HK] = 16383
+    now = _now()
+    pl.update(SatelliteState.NOMINAL, now)
+    d = pl.update(SatelliteState.NOMINAL, now)
+    hk = next(p for p in d.packets if p["apid"] == APID_HK)
+    assert hk["sequence_count"] == 0
+
+
+def test_science_packet_emitted_every_10_ticks():
+    pl = Payload()
+    now = _now()
+    sci_packets = []
+    for _ in range(10):
+        data = pl.update(SatelliteState.NOMINAL, now)
+        sci_packets.extend(p for p in data.packets if p["apid"] == APID_SCI)
+    assert len(sci_packets) == 1
+
+
+def test_eo_packet_emitted_in_downlink_pass():
+    pl = Payload()
+    data = pl.update(SatelliteState.DOWNLINK_PASS, _now())
+    apids = [p["apid"] for p in data.packets]
+    assert APID_EO in apids

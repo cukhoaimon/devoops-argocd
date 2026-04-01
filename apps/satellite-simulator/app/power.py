@@ -43,7 +43,7 @@ class PowerSystem:
             self.battery_v = min(_BATTERY_MAX_V, self.battery_v + _CHARGE_RATE * 0.5 * dt)
 
         return PowerData(
-            battery_v=round(self.battery_v + random.uniform(-0.05, 0.05), 2),
+            battery_v=round(max(_BATTERY_MIN_V, self.battery_v + random.uniform(-0.05, 0.05)), 2),
             solar_w=round(solar_w, 1),
             consumption_w=round(consumption_w, 1),
         )

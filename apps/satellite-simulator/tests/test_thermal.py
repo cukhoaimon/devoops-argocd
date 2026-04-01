@@ -27,6 +27,7 @@ def test_structure_temp_drops_furthest_in_eclipse():
     for _ in range(500):
         ts.update(SatelliteState.ECLIPSE, dt=1.0)
     assert ts.structure_temp_c < ts.cpu_temp_c
+    assert ts.structure_temp_c < ts.battery_temp_c
 
 
 def test_nominal_temps_stay_near_operating_range():

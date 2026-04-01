@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from app.states import SatelliteState
 
 
-@dataclass
+@dataclass(frozen=True)
 class ThermalData:
     cpu_temp_c: float
     battery_temp_c: float

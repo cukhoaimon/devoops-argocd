@@ -1,0 +1,5 @@
+spark:
+  jobNamespaces:
+    - spark          # only watch for SparkApplications in this namespace
+webhook:
+  enable: true       # required for volume injection into driver/executor pods

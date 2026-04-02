@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "k8s-troubleshooter@devops-skills": true
+  }
+}

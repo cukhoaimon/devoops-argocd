@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: satellite-simulator
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
@@ -11,7 +13,7 @@ spec:
     path: satellite-simulator
   destination:
     server: https://kubernetes.default.svc
-    namespace: kafka
+    namespace: satellite
   syncPolicy:
     automated:
       prune: true

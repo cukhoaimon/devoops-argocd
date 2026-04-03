@@ -1,4 +1,4 @@
 apiVersion: v2
-name: spart
+name: spark
 description: Spark on Kubernetes 
 version: 0.1.0

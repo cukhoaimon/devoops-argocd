@@ -21,21 +21,21 @@ spec:
           env:
             # ---- Warehouse location ----
             - name: CATALOG_WAREHOUSE
-              value: s3://warehouse/
+              value: {{ .Values.catalog.warehouse }}
 
-            # ---- FileIO: dùng S3 (MinIO) ----
+            # ---- FileIO: S3 (MinIO) ----
             - name: CATALOG_IO__IMPL
               value: org.apache.iceberg.aws.s3.S3FileIO
 
             # ---- S3 / MinIO config ----
             - name: CATALOG_S3_ENDPOINT
-              value: http://primary-object-store.data-warehouse.svc.cluster.local:9000
+              value: {{ .Values.catalog.s3Endpoint }}
             - name: CATALOG_S3_PATH__STYLE__ACCESS
               value: "true"
             - name: AWS_REGION
-              value: us-east-1         # bắt buộc dù MinIO không dùng
+              value: {{ .Values.catalog.awsRegion }}
 
-            # ---- Credentials từ Secret ----
+            # ---- MinIO credentials ----
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -47,19 +47,21 @@ spec:
                   name: primary-object-store-credentials
                   key: MINIO_ROOT_PASSWORD
 
-            # ---- SQLite backend ----
+            # ---- PostgreSQL backend ----
             - name: CATALOG_JDBC__IMPL
               value: org.apache.iceberg.jdbc.JdbcCatalog
             - name: CATALOG_URI
-              value: jdbc:sqlite:/catalog/iceberg.db
+              value: jdbc:postgresql://iceberg-postgres.data-warehouse.svc.cluster.local:5432/{{ .Values.postgres.database }}
             - name: CATALOG_JDBC_USER
-              value: iceberg
+              valueFrom:
+                secretKeyRef:
+                  name: iceberg-postgres-credentials
+                  key: POSTGRES_USER
             - name: CATALOG_JDBC_PASSWORD
-              value: iceberg
-
-          volumeMounts:
-            - name: catalog-data
-              mountPath: /catalog
+              valueFrom:
+                secretKeyRef:
+                  name: iceberg-postgres-credentials
+                  key: POSTGRES_PASSWORD
 
           resources:
             requests:
@@ -73,10 +75,5 @@ spec:
             httpGet:
               path: /v1/config
               port: 8181
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 5
-
-      volumes:
-        - name: catalog-data
-          persistentVolumeClaim:
-            claimName: iceberg-catalog-data

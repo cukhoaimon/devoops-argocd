@@ -1,0 +1,11 @@
+postgres:
+  image: postgres:16-alpine
+  database: iceberg
+  user: iceberg
+  password: iceberg
+  storage: 2Gi
+
+catalog:
+  warehouse: s3://warehouse/
+  s3Endpoint: http://primary-object-store.data-warehouse.svc.cluster.local:9000
+  awsRegion: us-east-1

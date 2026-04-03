@@ -1,0 +1,44 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: job-general
+  namespace: spark
+spec:
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: ghcr.io/cukhoaimon/spark-job-general:latest
+  imagePullPolicy: Always
+  mainApplicationFile: local:///opt/spark/jobs/main.py
+
+  sparkVersion: "3.5.3"
+  sparkConfigMap: spark-defaults # reuses your existing ConfigMap
+
+  driver:
+    cores: 1
+    memory: "1g"
+    serviceAccount: spark-driver
+    envFrom:
+      - secretRef:
+          name: minio-credentials
+    env:
+      - name: AWS_REGION
+        value: us-east-1
+
+  executor:
+    cores: 1
+    instances: 2
+    memory: "1g"
+    envFrom:
+      - secretRef:
+          name: minio-credentials
+    env:
+      - name: AWS_REGION
+        value: us-east-1
+
+  restartPolicy:
+    type: OnFailure
+    onFailureRetries: 2
+    onFailureRetryInterval: 10
+    onSubmissionFailureRetries: 3
+    onSubmissionFailureRetryInterval: 20

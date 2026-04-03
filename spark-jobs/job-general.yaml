@@ -12,7 +12,19 @@ spec:
   mainApplicationFile: local:///opt/spark/jobs/main.py
 
   sparkVersion: "3.5.3"
-  sparkConfigMap: spark-defaults # reuses your existing ConfigMap
+  sparkConfigMap: spark-defaults
+
+  sparkConf:
+    spark.sql.extensions: "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+    spark.sql.catalog.iceberg: "org.apache.iceberg.spark.SparkCatalog"
+    spark.sql.catalog.iceberg.type: "rest"
+    spark.sql.catalog.iceberg.uri: "http://iceberg-rest-catalog.data-warehouse.svc.cluster.local:8181"
+    spark.sql.catalog.iceberg.warehouse: "s3://warehouse/"
+    spark.sql.catalog.iceberg.io-impl: "org.apache.iceberg.aws.s3.S3FileIO"
+    spark.sql.catalog.iceberg.s3.endpoint: "http://primary-object-store.data-warehouse.svc.cluster.local:9000"
+    spark.sql.catalog.iceberg.s3.path-style-access: "true"
+    spark.sql.catalog.iceberg.s3.region: "us-east-1"
+    spark.sql.defaultCatalog: "iceberg"
 
   driver:
     cores: 1

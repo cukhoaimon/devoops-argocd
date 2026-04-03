@@ -1,9 +1,9 @@
 postgres:
-  image: postgres:16-alpine
+  host: postgresql.shared-services.svc.cluster.local
+  port: 5432
   database: iceberg
   user: iceberg
   password: iceberg
-  storage: 2Gi
 
 catalog:
   warehouse: s3://warehouse/

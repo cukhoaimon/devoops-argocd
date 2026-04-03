@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-init
+  namespace: shared-services
+data:
+  init-databases.sh: |
+    #!/bin/bash
+    set -e
+    {{- range .Values.databases }}
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+      CREATE USER {{ .user }} WITH PASSWORD '{{ .password }}';
+      CREATE DATABASE {{ .name }};
+      GRANT ALL PRIVILEGES ON DATABASE {{ .name }} TO {{ .user }};
+    EOSQL
+    {{- end }}

@@ -51,17 +51,11 @@ spec:
             - name: CATALOG_JDBC__IMPL
               value: org.apache.iceberg.jdbc.JdbcCatalog
             - name: CATALOG_URI
-              value: jdbc:postgresql://iceberg-postgres.data-warehouse.svc.cluster.local:5432/{{ .Values.postgres.database }}
+              value: jdbc:postgresql://{{ .Values.postgres.host }}:{{ .Values.postgres.port }}/{{ .Values.postgres.database }}
             - name: CATALOG_JDBC_USER
-              valueFrom:
-                secretKeyRef:
-                  name: iceberg-postgres-credentials
-                  key: POSTGRES_USER
+              value: {{ .Values.postgres.user }}
             - name: CATALOG_JDBC_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: iceberg-postgres-credentials
-                  key: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.password }}
 
           resources:
             requests:

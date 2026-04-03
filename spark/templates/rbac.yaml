@@ -26,7 +26,7 @@ rules:
     verbs: ["create", "get", "delete"]
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["create", "get", "delete"]
+    verbs: ["create", "get", "list", "delete", "deletecollection"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

@@ -1,0 +1,178 @@
+name: Build and Push
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "spark/docker/**"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # ── Stage 1: figure out what actually changed ────────────────────────────
+  detect-changes:
+    name: Detect Changed Apps
+    runs-on: ubuntu-latest
+    outputs:
+      spark-iceberg: ${{ steps.changes.outputs.spark-iceberg }}
+      satellite-simulator: ${{ steps.changes.outputs.satellite-simulator }}
+      spark-jobs: ${{ steps.changes.outputs.spark-jobs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Compute changed targets
+        id: changes
+        run: |
+          # Handles the null-SHA edge case on the very first push to a branch.
+          BEFORE="${{ github.event.before }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED=$(git diff-tree --no-commit-id -r --name-only HEAD)
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}" 2>/dev/null \
+              || git diff --name-only HEAD^ HEAD)
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          # ── spark-iceberg base image ──────────────────────────────────────
+          if echo "$CHANGED" | grep -q '^spark/docker/'; then
+            echo "spark-iceberg=true" >> "$GITHUB_OUTPUT"
+            # Base image changed → rebuild ALL spark jobs so none goes stale.
+            JOBS=$(find apps/spark-job -maxdepth 1 -mindepth 1 -type d \
+              -exec basename {} \; \
+              | jq -R -s -c '[split("\n")[] | select(length > 0)]')
+          else
+            echo "spark-iceberg=false" >> "$GITHUB_OUTPUT"
+            # Only the spark job directories that were actually touched.
+            JOBS=$(echo "$CHANGED" \
+              | grep '^apps/spark-job/' \
+              | awk -F'/' '{print $3}' \
+              | sort -u \
+              | jq -R -s -c '[split("\n")[] | select(length > 0)]')
+          fi
+          echo "spark-jobs=$JOBS" >> "$GITHUB_OUTPUT"
+
+          # ── satellite-simulator ───────────────────────────────────────────
+          if echo "$CHANGED" | grep -q '^apps/satellite-simulator/'; then
+            echo "satellite-simulator=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "satellite-simulator=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Stage 2a: base Spark image (everything else depends on this) ─────────
+  build-spark-iceberg:
+    name: Build spark-iceberg (base)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.spark-iceberg == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/cukhoaimon/spark-iceberg
+          tags: |
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=3.5.3,enable={{is_default_branch}}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: spark/docker
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── Stage 2b: spark jobs — one job definition, N parallel runners ─────────
+  build-spark-jobs:
+    name: Build spark-job/${{ matrix.job }}
+    needs: [detect-changes, build-spark-iceberg]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.spark-jobs != '[]' &&
+      needs.build-spark-iceberg.result != 'failure'
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ fromJson(needs.detect-changes.outputs.spark-jobs) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/cukhoaimon/spark-job-${{ matrix.job }}
+          tags: |
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/spark-job/${{ matrix.job }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── Stage 2c: satellite simulator (fully independent) ────────────────────
+  build-satellite-simulator:
+    name: Build satellite-simulator
+    needs: detect-changes
+    if: needs.detect-changes.outputs.satellite-simulator == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/cukhoaimon/satellite-simulator
+          tags: |
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: apps/satellite-simulator
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

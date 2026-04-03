@@ -9,6 +9,8 @@ spec:
   mode: cluster
   image: ghcr.io/cukhoaimon/spark-job-general:latest
   imagePullPolicy: Always
+  imagePullSecrets:
+    - ghcr-pull-secret
   mainApplicationFile: local:///opt/spark/jobs/main.py
 
   sparkVersion: "3.5.3"

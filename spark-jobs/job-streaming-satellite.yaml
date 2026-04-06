@@ -1,0 +1,77 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: job-streaming-satellite
+  namespace: spark
+spec:
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: ghcr.io/cukhoaimon/spark-job-streaming-satellite:latest
+  imagePullPolicy: Always
+  imagePullSecrets:
+    - ghcr-pull-secret
+  mainApplicationFile: local:///opt/spark/work-dir/main.py 
+
+  sparkVersion: "3.5.3"
+  sparkConfigMap: spark-defaults
+
+  sparkConf:
+    # ── Iceberg catalog ───────────────────────────────────────────────────────
+    spark.sql.extensions: "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+    spark.sql.catalog.iceberg: "org.apache.iceberg.spark.SparkCatalog"
+    spark.sql.catalog.iceberg.type: "rest"
+    spark.sql.catalog.iceberg.uri: "http://iceberg-rest-catalog.data-warehouse.svc.cluster.local:8181"
+    spark.sql.catalog.iceberg.warehouse: "s3://warehouse/"
+    spark.sql.catalog.iceberg.io-impl: "org.apache.iceberg.aws.s3.S3FileIO"
+    spark.sql.catalog.iceberg.s3.endpoint: "http://primary-object-store.data-warehouse.svc.cluster.local:9000"
+    spark.sql.catalog.iceberg.s3.path-style-access: "true"
+    spark.sql.catalog.iceberg.s3.region: "us-east-1"
+    spark.sql.defaultCatalog: "iceberg"
+    # ── S3A filesystem (checkpoint storage) ──────────────────────────────────
+    spark.hadoop.fs.s3a.endpoint: "http://primary-object-store.data-warehouse.svc.cluster.local:9000"
+    spark.hadoop.fs.s3a.path.style.access: "true"
+    spark.hadoop.fs.s3a.connection.ssl.enabled: "false"
+    spark.hadoop.fs.s3a.impl: "org.apache.hadoop.fs.s3a.S3AFileSystem"
+    spark.hadoop.fs.s3a.aws.credentials.provider: "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider"
+
+  driver:
+    cores: 1
+    memory: "512m"
+    serviceAccount: spark-driver
+    envFrom:
+      - secretRef:
+          name: minio-credentials
+    env:
+      - name: AWS_REGION
+        value: us-east-1
+      # ── Kafka source ───────────────────────────────────────────────────────
+      - name: KAFKA_BOOTSTRAP
+        value: "my-cluster-kafka-bootstrap.kafka:9092"
+      - name: KAFKA_TOPIC
+        value: "satellite-telemetry"
+      - name: KAFKA_STARTING_OFFSETS
+        value: "latest"
+      # ── Streaming tuning ───────────────────────────────────────────────────
+      - name: CHECKPOINT_LOCATION
+        value: "s3a://warehouse/checkpoints/satellite-telemetry/"
+      - name: TRIGGER_INTERVAL_SECONDS
+        value: "30"
+
+  executor:
+    cores: 1
+    instances: 1
+    memory: "512m"
+    envFrom:
+      - secretRef:
+          name: minio-credentials
+    env:
+      - name: AWS_REGION
+        value: us-east-1
+
+  restartPolicy:
+    type: OnFailure
+    onFailureRetries: 2
+    onFailureRetryInterval: 10
+    onSubmissionFailureRetries: 3
+    onSubmissionFailureRetryInterval: 20

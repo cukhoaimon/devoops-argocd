@@ -72,3 +72,4 @@ htmlcov/
 # pyenv
 # .python-version
 .serena
+.env

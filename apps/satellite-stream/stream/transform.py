@@ -21,6 +21,7 @@ from stream.schema import TELEMETRY_KAFKA_SCHEMA
 logger = logging.getLogger(__name__)
 
 
+
 def parse_kafka_value(raw_df: DataFrame) -> DataFrame:
     """
     Decode the Kafka 'value' bytes as UTF-8 JSON and expand into columns.

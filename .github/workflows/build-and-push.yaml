@@ -19,7 +19,6 @@ jobs:
     outputs:
       spark-iceberg: ${{ steps.changes.outputs.spark-iceberg }}
       satellite-simulator: ${{ steps.changes.outputs.satellite-simulator }}
-      satellite-stream: ${{ steps.changes.outputs.satellite-stream }}
       spark-jobs: ${{ steps.changes.outputs.spark-jobs }}
     steps:
       - uses: actions/checkout@v4
@@ -64,13 +63,6 @@ jobs:
             echo "satellite-simulator=true" >> "$GITHUB_OUTPUT"
           else
             echo "satellite-simulator=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          # ── satellite-stream ──────────────────────────────────────────────
-          if echo "$CHANGED" | grep -q '^apps/satellite-stream/'; then
-            echo "satellite-stream=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "satellite-stream=false" >> "$GITHUB_OUTPUT"
           fi
 
   # ── Stage 2a: base Spark image (everything else depends on this) ─────────
@@ -151,41 +143,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Stage 2c: satellite stream (fully independent) ──────────────────────
-  build-satellite-stream:
-    name: Build satellite-stream
-    needs: detect-changes
-    if: needs.detect-changes.outputs.satellite-stream == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/cukhoaimon/satellite-stream
-          tags: |
-            type=sha,prefix=,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: apps/satellite-stream
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ── Stage 2d: satellite simulator (fully independent) ────────────────────
+  # ── Stage 2c: satellite simulator (fully independent) ────────────────────
   build-satellite-simulator:
     name: Build satellite-simulator
     needs: detect-changes

@@ -5,7 +5,7 @@ description = "Spark Structured Streaming job: Kafka satellite-telemetry → Ice
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pyspark==3.5.3",
+    "pyspark==4.0.0",
 ]
 
 [project.scripts]

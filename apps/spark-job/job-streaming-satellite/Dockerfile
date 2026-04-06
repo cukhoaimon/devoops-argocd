@@ -8,7 +8,7 @@
 # No extra --packages or wget needed here.
 # ─────────────────────────────────────────────────────────────────────────────
 
-FROM ghcr.io/cukhoaimon/spark-iceberg:3.5.3
+FROM ghcr.io/cukhoaimon/spark-iceberg:4.0.0
 
 USER root
 

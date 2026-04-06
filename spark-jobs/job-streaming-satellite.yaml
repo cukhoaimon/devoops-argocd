@@ -13,7 +13,7 @@ spec:
     - ghcr-pull-secret
   mainApplicationFile: local:///opt/spark/work-dir/main.py 
 
-  sparkVersion: "3.5.3"
+  sparkVersion: "4.0.0"
   sparkConfigMap: spark-defaults
 
   sparkConf:
@@ -54,7 +54,7 @@ spec:
         value: "latest"
       # ── Streaming tuning ───────────────────────────────────────────────────
       - name: CHECKPOINT_LOCATION
-        value: "s3a://warehouse/checkpoints/satellite-telemetry/"
+        value: "s3a://warehouse/checkpoints/satellite-telemetry/v2/"
       - name: TRIGGER_INTERVAL_SECONDS
         value: "30"
 

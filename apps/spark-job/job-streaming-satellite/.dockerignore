@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.python-version
+README.md
+build-and-push.sh

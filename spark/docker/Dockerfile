@@ -28,7 +28,8 @@ RUN MAVEN="https://repo1.maven.org/maven2" && \
         "${MAVEN}/org/apache/spark/spark-sql-kafka-0-10_${SCALA_VERSION}/${SPARK_FULL_VERSION}/spark-sql-kafka-0-10_${SCALA_VERSION}-${SPARK_FULL_VERSION}.jar" \
         "${MAVEN}/org/apache/spark/spark-token-provider-kafka-0-10_${SCALA_VERSION}/${SPARK_FULL_VERSION}/spark-token-provider-kafka-0-10_${SCALA_VERSION}-${SPARK_FULL_VERSION}.jar" \
         "${MAVEN}/org/apache/kafka/kafka-clients/3.7.0/kafka-clients-3.7.0.jar" \
-        "${MAVEN}/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar" && \
+        "${MAVEN}/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar" \
+        "${MAVEN}/software/amazon/awssdk/s3-transfer-manager/2.33.0/s3-transfer-manager-2.33.0.jar" && \
     chmod 644 /opt/spark/jars/*.jar
 
 # Python packages

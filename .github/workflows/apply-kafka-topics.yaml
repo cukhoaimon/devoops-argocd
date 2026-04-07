@@ -1,0 +1,17 @@
+name: Apply Kafka Topics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "kafka/topics/**"
+
+jobs:
+  apply-topics:
+    name: Apply Kafka Topics to Local Cluster
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply Kafka topics
+        run: kubectl apply -f kafka/topics/

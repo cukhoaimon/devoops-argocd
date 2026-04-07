@@ -10,6 +10,8 @@ Changes pushed to the `main` branch of `github.com/cukhoaimon/devoops-argocd` ar
 
 ## Architecture
 
+![Architecture Diagram](docs/architecture.svg)
+
 All components are deployed as **Helm charts**, each with a corresponding ArgoCD `Application` manifest under `argocd/`.
 
 ```

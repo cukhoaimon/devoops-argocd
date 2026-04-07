@@ -15,7 +15,7 @@ jobs:
   # ── Stage 1: figure out what actually changed ────────────────────────────
   detect-changes:
     name: Detect Changed Apps
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       spark-iceberg: ${{ steps.changes.outputs.spark-iceberg }}
       satellite-simulator: ${{ steps.changes.outputs.satellite-simulator }}
@@ -70,7 +70,10 @@ jobs:
     name: Build spark-iceberg (base)
     needs: detect-changes
     if: needs.detect-changes.outputs.spark-iceberg == 'true'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -113,7 +116,10 @@ jobs:
       fail-fast: false
       matrix:
         job: ${{ fromJson(needs.detect-changes.outputs.spark-jobs) }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -148,7 +154,10 @@ jobs:
     name: Build satellite-simulator
     needs: detect-changes
     if: needs.detect-changes.outputs.satellite-simulator == 'true'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 

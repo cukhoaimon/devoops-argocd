@@ -50,6 +50,8 @@ docs/                 # Weekly learning notes per milestone
 
 ### Data Stack Integration
 
+![Spark Structured Streaming](docs/assets/spark-structured-streaming.png)
+
 ```
 Satellite Simulator ──► Kafka (topic: telemetry)
                               │

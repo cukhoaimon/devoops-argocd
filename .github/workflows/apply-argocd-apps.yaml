@@ -1,0 +1,54 @@
+name: Apply ArgoCD Applications
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "argocd/**"
+
+jobs:
+  apply-new-apps:
+    name: Apply New ArgoCD Application Manifests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect newly added ArgoCD manifests
+        id: detect
+        run: |
+          # --diff-filter=A → only files that were Added (not modified/deleted)
+          # Handles the null-SHA edge case on the very first push to a branch.
+          BEFORE="${{ github.event.before }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            NEW_FILES=$(git diff-tree --no-commit-id -r --name-only --diff-filter=A HEAD \
+              | grep '^argocd/' || true)
+          else
+            NEW_FILES=$(git diff --name-only --diff-filter=A "$BEFORE" "${{ github.sha }}" 2>/dev/null \
+              || git diff --name-only --diff-filter=A HEAD^ HEAD \
+              | grep '^argocd/' || true)
+          fi
+
+          echo "Newly added files in argocd/:"
+          echo "${NEW_FILES:-  (none)"}"
+
+          # Emit newline-separated list as a JSON array for downstream steps
+          if [ -z "$NEW_FILES" ]; then
+            echo "files=[]" >> "$GITHUB_OUTPUT"
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+          else
+            FILES_JSON=$(echo "$NEW_FILES" | jq -R -s -c '[split("\n")[] | select(length > 0)]')
+            echo "files=$FILES_JSON" >> "$GITHUB_OUTPUT"
+            echo "has_new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply new ArgoCD Application manifests
+        if: steps.detect.outputs.has_new == 'true'
+        run: |
+          echo '${{ steps.detect.outputs.files }}' \
+            | jq -r '.[]' \
+            | while read -r file; do
+                echo "──► kubectl apply -f $file"
+                kubectl apply -f "$file"
+              done

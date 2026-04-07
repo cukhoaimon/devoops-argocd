@@ -94,7 +94,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: spark/docker
-          platforms: linux/amd64
+          platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -136,7 +136,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: apps/spark-job/${{ matrix.job }}
-          platforms: linux/amd64
+          platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -171,6 +171,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: apps/satellite-simulator
+          platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

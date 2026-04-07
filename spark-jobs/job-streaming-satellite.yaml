@@ -56,7 +56,7 @@ spec:
       - name: CHECKPOINT_LOCATION
         value: "s3a://warehouse/checkpoints/satellite-telemetry/v2/"
       - name: TRIGGER_INTERVAL_SECONDS
-        value: "30"
+        value: "300"
 
   executor:
     cores: 1

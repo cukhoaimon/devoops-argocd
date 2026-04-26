@@ -1,0 +1,3 @@
+- [ML Platform Review 2026-04-08](project_ml_platform_review_2026-04-08.md) — open issues from satellite-telemetry data+ML platform review; #1 blocker is Iceberg REST still on SQLite (must move to Postgres)
+- [Orchestrator: Dagster not Airflow](feedback_orchestrator_dagster.md) — user rejected Airflow; use Dagster for all data/ML orchestration; Temporal is not a data orchestrator
+- [Architecture decisions 2026-04-09](project_architecture_decisions_2026-04-09.md) — locked target-state tech picks: Feast+Redis, MLflow, KServe, Dagster, OpenLineage, Great Expectations, Evidently, Apicurio, retire HBase, Iceberg-only TSDB

@@ -47,10 +47,17 @@ C4Container
   }
 
   Boundary(dw_ns, "Namespace: data-warehouse") {
-    Container(iceberg, "Iceberg REST Catalog", "tabulario/iceberg-rest:0.10.0", "Manages table metadata, exposes REST API on port 8181, uses SQLite for persistence")
+    Container(iceberg, "Iceberg REST Catalog", "tabulario/iceberg-rest:0.10.0", "Manages table metadata, exposes REST API on port 8181, uses PostgreSQL JDBC catalog backend")
     Container(minio, "MinIO Object Store", "quay.io/minio/minio:latest", "S3-compatible object storage, stores Iceberg data files. NodePort 31000 for external S3 API access")
-    ContainerDb(sqlite, "SQLite DB", "File on PVC", "Stores Iceberg catalog metadata (table schemas, snapshots, manifests)")
     ContainerDb(minio_storage, "MinIO PVC", "10Gi PersistentVolume", "Persistent storage for all data files (Parquet, Avro, ORC)")
+  }
+
+  Boundary(ss_ns, "Namespace: shared-services") {
+    ContainerDb(postgres, "PostgreSQL 16", "postgres:16-alpine", "Stores Iceberg catalog metadata (table schemas, snapshots, manifests). 5Gi PVC. Database: iceberg, User: iceberg")
+  }
+
+  Boundary(satellite_ns, "Namespace: satellite") {
+    Container(sat_sim, "Satellite Simulator", "ghcr.io/cukhoaimon/satellite-simulator", "Generates synthetic satellite telemetry, publishes to Kafka topic satellite-telemetry")
   }
 
   Boundary(kafka_ns, "Namespace: kafka") {
@@ -73,8 +80,9 @@ C4Container
   Rel(spark_connect, minio, "Reads/writes data files", "S3 API port 9000")
   Rel(spark_executor, minio, "Reads/writes data files", "S3 API port 9000")
   Rel(iceberg, minio, "Stores/fetches data files", "S3 API port 9000")
-  Rel(iceberg, sqlite, "Persists catalog metadata", "JDBC jdbc:sqlite://")
+  Rel(iceberg, postgres, "Persists catalog metadata", "JDBC jdbc:postgresql:// port 5432")
   Rel(minio, minio_storage, "Persists object data", "")
+  Rel(sat_sim, kafka, "Publishes telemetry events", "Kafka producer port 9092")
   Rel(argocd, spark_connect, "Deploys & reconciles", "Kubernetes API")
   Rel(argocd, iceberg, "Deploys & reconciles", "Kubernetes API")
   Rel(argocd, minio, "Deploys & reconciles", "Kubernetes API")
@@ -156,6 +164,8 @@ flowchart TD
       O[Spark Connect\nNamespace: spark]
       P[JupyterLab\nNamespace: spark]
       Q[Kafka\nNamespace: kafka]
+      R[PostgreSQL\nNamespace: shared-services]
+      S[Satellite Simulator\nNamespace: satellite]
     end
   end
 
@@ -184,7 +194,7 @@ sequenceDiagram
   participant SD as Spark Driver<br/>(spark ns)
   participant SE as Spark Executors<br/>(spark ns, dynamic pods)
   participant IR as Iceberg REST<br/>(data-warehouse ns, :8181)
-  participant SQ as SQLite PVC<br/>(catalog metadata)
+  participant PG as PostgreSQL<br/>(shared-services ns, :5432)
   participant MN as MinIO<br/>(data-warehouse ns, :9000)
 
   User->>JL: Open notebook, run PySpark cell
@@ -194,7 +204,7 @@ sequenceDiagram
 
   Note over SD,IR: CREATE TABLE or INSERT operation
   SD->>IR: POST /v1/namespaces/{ns}/tables (Iceberg REST API)
-  IR->>SQ: Write table metadata (schema, snapshot, manifest list)
+  IR->>PG: Write table metadata (schema, snapshot, manifest list)
   IR-->>SD: Table location: s3://warehouse/db/table/
 
   SD->>SE: Distribute write tasks
@@ -202,11 +212,11 @@ sequenceDiagram
   MN-->>SE: 200 OK
   SE-->>SD: Task complete
   SD->>IR: POST /v1/.../tables/{table}/snapshots (commit snapshot)
-  IR->>SQ: Persist new snapshot pointer
+  IR->>PG: Persist new snapshot pointer
 
   Note over SD,IR: SELECT / read operation
   SD->>IR: GET /v1/.../tables/{table} (fetch current snapshot)
-  IR->>SQ: Read latest snapshot metadata
+  IR->>PG: Read latest snapshot metadata
   IR-->>SD: Manifest list location in MinIO
   SD->>MN: GET s3://warehouse/db/table/metadata/snap-*.avro
   MN-->>SD: Manifest list (list of data files)
@@ -217,6 +227,40 @@ sequenceDiagram
   SD-->>SC: DataFrame result
   SC-->>JL: Display in notebook
   JL-->>User: Shows query output
+```
+
+---
+
+## Data Flow — Satellite Telemetry Streaming Pipeline
+
+```mermaid
+sequenceDiagram
+  participant SS as Satellite Simulator<br/>(satellite ns)
+  participant KF as Kafka Broker<br/>(kafka ns, :9092)
+  participant SJ as Spark Streaming Job<br/>(spark ns, SparkApplication CRD)
+  participant IR as Iceberg REST<br/>(data-warehouse ns, :8181)
+  participant PG as PostgreSQL<br/>(shared-services ns, :5432)
+  participant MN as MinIO<br/>(data-warehouse ns, :9000)
+
+  loop Every telemetry cycle
+    SS->>KF: Produce JSON event → topic: satellite-telemetry
+  end
+
+  Note over SJ: Spark Structured Streaming job<br/>trigger interval: 300s (microbatch)
+  SJ->>KF: Subscribe to satellite-telemetry (offset tracking)
+  KF-->>SJ: Batch of telemetry records
+
+  SJ->>SJ: Parse, validate, enrich records
+  SJ->>IR: Resolve Iceberg table location (REST API)
+  IR->>PG: Read current snapshot metadata
+  PG-->>IR: Snapshot + manifest pointers
+  IR-->>SJ: Table location s3://warehouse/...
+
+  SJ->>MN: Write Parquet data files (S3 API)
+  MN-->>SJ: 200 OK
+  SJ->>IR: Commit new Iceberg snapshot
+  IR->>PG: Persist snapshot + manifest metadata
+  SJ->>MN: Write checkpoint s3://warehouse/checkpoints/satellite-telemetry/v2/
 ```
 
 ---
@@ -254,6 +298,14 @@ graph TB
       kafka_tls["my-kafka-cluster :9093 (TLS)"]
     end
 
+    subgraph ss_ns["Namespace: shared-services"]
+      postgres_svc["postgresql :5432"]
+    end
+
+    subgraph satellite_ns["Namespace: satellite"]
+      sat_sim_pod["satellite-simulator"]
+    end
+
     subgraph nonprod_ns["Namespace: non-prod (downscaled)"]
       zk_svc["zookeeper :2181, :2888, :3888"]
       hbase_master_svc["hbase-master :16000, :16010"]
@@ -287,6 +339,8 @@ graph TB
   executor_pods -->|"S3 :9000"| minio_svc
   executor_pods -->|"callback :7078"| spark_headless
   iceberg_svc -->|"S3 :9000"| minio_svc
+  iceberg_svc -->|"JDBC :5432"| postgres_svc
+  sat_sim_pod -->|"produce :9092"| kafka_plain
   spark_svc -->|"spawn pods"| k8s_api
   k8s_api -->|"executor pods"| executor_pods
   argocd_svc -->|"HTTPS poll"| github_repo
@@ -310,7 +364,7 @@ graph LR
     pvc1["hbase-rootdir\n5Gi ReadWriteMany\nns: non-prod"]
     pvc2["hbase-rs-storage\n5Gi per replica\nns: non-prod"]
     pvc3["minio-storage\n10Gi\nns: data-warehouse"]
-    pvc4["iceberg-catalog-storage\n1Gi\nns: data-warehouse"]
+    pvc4["postgresql-storage\n5Gi\nns: shared-services"]
     pvc5["spark-ivy-cache\n2Gi\nns: spark"]
     pvc6["jupyter-notebooks\n1Gi\nns: spark"]
   end
@@ -319,7 +373,7 @@ graph LR
   hbase_rs["HBase RegionServer"] -->|"rootdir shared"| pvc1
   hbase_rs -->|"per-replica WAL/store"| pvc2
   minio_pod["MinIO Pod"] --> pvc3
-  iceberg_pod["Iceberg REST Pod"] -->|"SQLite DB"| pvc4
+  postgres_pod["PostgreSQL Pod"] -->|"catalog DB"| pvc4
   spark_pod["Spark Connect Pod"] -->|"JAR cache"| pvc5
   jupyter_pod["JupyterLab Pod"] -->|"/home/jovyan/work"| pvc6
 ```
@@ -370,7 +424,9 @@ flowchart LR
 | **HBase Master** | harisekhon/hbase:2.1 | non-prod | **0** (down) | 16000/16010 | Shared 5Gi PVC | Internal only |
 | **HBase RegionServer** | harisekhon/hbase:2.1 | non-prod | **0** (down) | 16020/16030 | 5Gi per replica | Internal only |
 | **MinIO** | quay.io/minio/minio | data-warehouse | 1 | 9000/9001 | 10Gi PVC | NodePort 31000/31001 |
-| **Iceberg REST** | tabulario/iceberg-rest:0.10.0 | data-warehouse | 1 | 8181 | 1Gi PVC (SQLite) | ClusterIP only |
+| **PostgreSQL** | postgres:16-alpine | shared-services | 1 | 5432 | 5Gi PVC | ClusterIP only |
+| **Iceberg REST** | tabulario/iceberg-rest:0.10.0 | data-warehouse | 1 | 8181 | PostgreSQL (shared-services) | ClusterIP only |
+| **Satellite Simulator** | ghcr.io/cukhoaimon/satellite-simulator | satellite | 1 | — | — | Internal only |
 | **Spark Connect** | ghcr.io/cukhoaimon/spark-iceberg:3.5.3 | spark | 1 | 15002/4040/7078 | 2Gi Ivy cache | ClusterIP only |
 | **Spark Executors** | ghcr.io/cukhoaimon/spark-iceberg:3.5.3 | spark | 2 (dynamic) | — | — | Internal only |
 | **JupyterLab** | quay.io/jupyter/pyspark-notebook | spark | 1 | 8888 | 1Gi PVC | `jupyter.local` (Ingress) |

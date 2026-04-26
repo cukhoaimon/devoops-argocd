@@ -51,7 +51,7 @@ argocd/               # ArgoCD Application manifests (one per component) + apply
 my-web/               # Helm chart — nginx static site (Deployment + Service + Ingress)
 hbase/                # Helm chart — HBase (ZooKeeper + Master + RegionServer StatefulSets)
 minio/aistor-operator/# Helm chart — MinIO via AiStor Operator + SealedSecret credentials
-iceberg/              # Helm chart — Iceberg REST Catalog (REST server + SQLite PVC)
+iceberg/              # Helm chart — Iceberg REST Catalog (REST server + PostgreSQL JDBC backend)
 spark/                # Helm chart — Spark on K8s + custom image (spark/docker/)
 jupyter/              # Helm chart — JupyterLab (pyspark-notebook, Spark Connect, ingress jupyter.local)
 docker-compose.yaml   # Local test stack: MinIO + Iceberg REST + Spark
@@ -66,13 +66,16 @@ docs/                 # Weekly learning notes per milestone
 | hbase | non-prod |
 | minio | data-warehouse |
 | iceberg | data-warehouse |
+| postgresql | shared-services |
 | spark | spark |
 | jupyter | spark |
+| kafka | kafka |
+| satellite-simulator | satellite |
 
 ### Data Stack Integration
 ```
 Iceberg REST Catalog ──► MinIO (S3 API, NodePort 31000) — stores data files
-                    ──► SQLite PVC                      — stores catalog metadata
+                    ──► PostgreSQL (shared-services ns)  — stores catalog metadata
 Spark ──► Iceberg REST ──► MinIO
 JupyterLab (jupyter.local) ──► Spark Connect (port 15002) ──► Iceberg REST ──► MinIO
 ```

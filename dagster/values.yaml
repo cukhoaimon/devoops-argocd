@@ -1,5 +1,6 @@
 dagster:
-  imagePullSecrets: ["ghcr-secret"]
+  imagePullSecrets: 
+    - name: ghcr-secret
 
   dagster-user-deployments:
     deployments:
